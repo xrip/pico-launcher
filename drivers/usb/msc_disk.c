@@ -61,9 +61,7 @@ bool tud_msc_test_unit_ready_cb(uint8_t lun) {
 }
 
 bool tud_msc_ejected() {
-    // char tmp[80]; sprintf(tmp, "tud_msc_ejected: %d", ejected_cnt); logMsg(tmp);
-    set_tud_msc_ejected(true); // force eject remaining drive
-    return true;
+    return ejectedDrv;
 }
 
 void set_tud_msc_ejected(bool v) {
