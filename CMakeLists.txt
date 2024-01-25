@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 include(pico_sdk_import.cmake)
-pico_sdk_init()
 
 project(launcher C CXX ASM)
-
+pico_sdk_init()
 SET(BUILD_NAME "${PROJECT_NAME}")
 
 option(VGA "Enable VGA" OFF)
@@ -75,7 +74,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
 pico_define_boot_stage2(slower_boot2 ${PICO_DEFAULT_BOOT_STAGE2_FILE})
 # 2Mb
-target_compile_definitions(slower_boot2 PRIVATE CUSTOM_XIP_BASE=0x10200000)
+target_compile_definitions(slower_boot2 PRIVATE CUSTOM_XIP_BASE=0x101f0000)
 # 16Mb
 #target_compile_definitions(slower_boot2 PRIVATE CUSTOM_XIP_BASE=0x10ff0000)
 target_compile_definitions(slower_boot2 PRIVATE PICO_FLASH_SPI_CLKDIV=4)

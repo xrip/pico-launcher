@@ -206,7 +206,7 @@ void draw_window(char* title, uint32_t x, uint32_t y, uint32_t width, uint32_t h
     }
 
     snprintf(line, width - 1, " %s ", title);
-    draw_text(line, x +(width - strlen(line)) / 2, y, 0, 3);
+    draw_text(line, x +(width - strlen(line)) / 2, y, 14, 3);
 }
 
 void __inline __scratch_y("refresh_lcd") refresh_lcd() {
