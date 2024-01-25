@@ -368,10 +368,13 @@ int main() {
     for (int i = 2; i--;) {
         nespad_read();
         sleep_ms(50);
+
+        // Boot to USB FIRMWARE UPDATE mode
         if ((nespad_state & DPAD_START) != 0) {
             reset_usb_boot(0, 0);
-            while (true) tight_loop_contents();
         }
+
+        // Run launcher
         if ((nespad_state & DPAD_SELECT) != 0) {
             sem_init(&vga_start_semaphore, 0, 1);
             multicore_launch_core1(render_core);
