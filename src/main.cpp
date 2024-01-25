@@ -22,6 +22,7 @@ uint8_t manager_started = false;
 #endif
 
 #include "ps2.h"
+#include "usb.h"
 }
 
 #include "ff.h"
@@ -76,7 +77,9 @@ void __time_critical_func(render_core)() {
     // 60 FPS loop
 #define frame_tick (16666)
     uint64_t tick = time_us_64();
+#ifdef TFT
     uint64_t last_renderer_tick = tick;
+#endif
     uint64_t last_input_tick = tick;
     while (true) {
 #ifdef TFT
@@ -393,6 +396,13 @@ int main() {
 
             sleep_ms(250);
             filebrowser("", "uf2");
+        }
+    }
+    // TODO: define a case to start card-reader
+    if (true) {
+        init_pico_usb_drive();
+        while(!tud_msc_ejected()) {
+            pico_usb_drive_heartbeat();
         }
     }
 

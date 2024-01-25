@@ -18,6 +18,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${OUTPUT_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${OUTPUT_DIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${OUTPUT_DIR}")
 
+set(FAMILY rp2040)
+set(BOARD pico_sdk)
+
 add_subdirectory(drivers/ps2)
 add_subdirectory(drivers/fatfs)
 add_subdirectory(drivers/sdcard)
@@ -28,7 +31,7 @@ add_subdirectory(drivers/st7789)
 add_subdirectory(drivers/hdmi)
 
 # INCLUDE FILES THAT SHOULD BE COMPILED:
-file(GLOB_RECURSE SRC "src/*.cpp" "src/*.c")
+file(GLOB_RECURSE SRC "src/*.cpp" "src/*.c" "drivers/usb/*.c")
 
 message(STATUS "Add source files:")
 foreach (SRC_FILE IN LISTS SRC)
@@ -56,6 +59,30 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         pico_multicore
         hardware_flash
 )
+
+family_configure_device_example(${PROJECT_NAME} noos)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/usb
+)
+
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+target_compile_options(${PROJECT_NAME} PUBLIC
+        -Wno-error=suggest-attribute=format
+        -Wno-error=cast-qual
+        -Wno-error=unused-parameter
+        -Wno-error=conversion
+        -Wno-error=format=
+        -Wno-error=sign-compare
+        -Wno-error=missing-field-initializers
+        -Wno-error=switch
+        -Wno-error=implicit-fallthrough=
+        -Wno-error=stringop-truncation
+        -Wno-error=restrict
+        -w
+)
+endif ()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
         # SDCARD
