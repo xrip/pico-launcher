@@ -372,12 +372,12 @@ int main() {
     set_sys_clock_khz(378 * 1000, true);
 
     keyboard_init();
-    keyboard_send(0xFF);
+    //keyboard_send(0xFF);
     nespad_begin(clock_get_hz(clk_sys) / 1000, NES_GPIO_CLK, NES_GPIO_DATA, NES_GPIO_LAT);
 
-    for (int i = 200; i--;) {
+    for (int i = 20; i--;) {
         nespad_read();
-        sleep_ms(5);
+        sleep_ms(50);
 
         // F12 Boot to USB FIRMWARE UPDATE mode
         if ((nespad_state & DPAD_START) != 0 || input == 0x58 ) {
@@ -385,7 +385,7 @@ int main() {
         }
 
         // F11 Run launcher
-        if ((nespad_state & DPAD_SELECT) != 0 || input == 0x57) {
+        if ((nespad_state & DPAD_SELECT) != 0 || input != 0x57) {
             sem_init(&vga_start_semaphore, 0, 1);
             multicore_launch_core1(render_core);
             sem_release(&vga_start_semaphore);
