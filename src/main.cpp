@@ -114,8 +114,8 @@ void __not_in_flash_func(load_firmware)(const char pathname[256]) {
     constexpr int window_y = (TEXTMODE_ROWS - 5) / 2;
     constexpr int window_x = (TEXTMODE_COLS - 43) / 2;
 
-    draw_window("Loading firmware", window_x, window_y, 43, 5);
-    draw_text("Loading...", window_x + 1, window_y + 2, 10, 1);
+    draw_window((char*)"Loading firmware", window_x, window_y, 43, 5);
+    draw_text((char*)"Loading...", window_x + 1, window_y + 2, 10, 1);
     sleep_ms(100);
 
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
@@ -180,7 +180,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
     FILINFO fileInfo;
 
     if (FR_OK !=  f_mount(&fs, "", 1)) {
-        draw_text("SD Card not inserted or SD Card error!", 0, 0, 12, 0);
+        draw_text((char*)"SD Card not inserted or SD Card error!", 0, 0, 12, 0);
         while (true) { sleep_ms(100); /*TODO: reboot? */ }
     }
 

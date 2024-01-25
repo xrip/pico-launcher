@@ -492,7 +492,7 @@ static int current_line = 25;
 static int start_debug_line = 25;
 
 void clrScr(const uint8_t color) {
-    uint16_t* t_buf = text_buffer;
+    uint16_t* t_buf = (uint16_t*)text_buffer;
     int size = TEXTMODE_COLS * TEXTMODE_ROWS;
 
     while (size--) *t_buf++ = color << 4 << 8 | ' ';
