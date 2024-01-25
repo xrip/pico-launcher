@@ -128,7 +128,7 @@ bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
     FILINFO fileinfo;
     f_stat(pathname, &fileinfo);
 
-    if ((FLASH_SIZE - 64) << 10 < fileinfo.fsize / 2) {
+    if (FLASH_SIZE - 64 << 10 < fileinfo.fsize / 2) {
         draw_text("ERROR: Firmware too large! Canceled!!", window_x + 1, window_y + 2, 13, 1);
         sleep_ms(5000);
         return false;
