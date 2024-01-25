@@ -76,7 +76,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
         SDCARD_PIN_SPI0_MISO=4
 
         # NES Gamepad
-        USE_NESPAD
         NES_GPIO_CLK=14
         NES_GPIO_DATA=16
         NES_GPIO_LAT=15
