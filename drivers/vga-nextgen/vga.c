@@ -492,7 +492,7 @@ static int current_line = 25;
 static int start_debug_line = 25;
 
 void clrScr(const uint8_t color) {
-    uint16_t* t_buf = text_buffer;
+    uint16_t* t_buf = (uint16_t *)text_buffer;
     int size = TEXTMODE_COLS * TEXTMODE_ROWS;
 
     while (size--) *t_buf++ = color << 4 << 8 | ' ';
@@ -508,7 +508,7 @@ void draw_text(char* string, uint32_t x, uint32_t y, uint8_t color, uint8_t bgco
 }
 
 void draw_window(char* title, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-    char line[width+1];
+    char line[width + 1];
     memset(line, 0, sizeof line);
     width--;
     height--;
@@ -529,11 +529,11 @@ void draw_window(char* title, uint32_t x, uint32_t y, uint32_t width, uint32_t h
     line[0] = line[width] = 0xBA;
 
     for (int i = 1; i < height; i++) {
-        draw_text(line, x, y+i, 11, 1);
+        draw_text(line, x, y + i, 11, 1);
     }
 
     snprintf(line, width - 1, " %s ", title);
-    draw_text(line, x +(width - strlen(line)) / 2, y, 0, 3);
+    draw_text(line, x + (width - strlen(line)) / 2, y, 0, 3);
 }
 
 char* get_free_vram_ptr() {

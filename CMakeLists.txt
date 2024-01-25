@@ -3,12 +3,19 @@ include(pico_sdk_import.cmake)
 
 project(launcher C CXX ASM)
 pico_sdk_init()
-SET(BUILD_NAME "${PROJECT_NAME}")
+
 
 option(VGA "Enable VGA" OFF)
 option(TFT "Enable TFT display" OFF)
 option(ILI9341 "Enable TFT ILI9341 display" OFF)
 option(HDMI "Enable HDMI display" OFF)
+option(FLASH_SIZE "Target Flash Size" 2048)
+
+if(NOT FLASH_SIZE)
+set(FLASH_SIZE 2048)
+endif ()
+
+SET(BUILD_NAME "${PROJECT_NAME}-${FLASH_SIZE}K")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -38,7 +45,9 @@ message(STATUS "")
 
 add_executable(${PROJECT_NAME} ${SRC})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-pico_set_linker_script(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/memmap.ld)
+
+configure_file(memmap.ld.in memmap.ld @ONLY)
+pico_set_linker_script(${PROJECT_NAME} ${CMAKE_CURRENT_BINARY_DIR}/memmap.ld)
 
 pico_set_program_name(${PROJECT_NAME} "RetroPico Launcher")
 pico_set_program_version(${PROJECT_NAME} "test")
@@ -73,13 +82,14 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
 
 pico_define_boot_stage2(slower_boot2 ${PICO_DEFAULT_BOOT_STAGE2_FILE})
-# 2Mb
-target_compile_definitions(slower_boot2 PRIVATE CUSTOM_XIP_BASE=0x101f0000)
-# 16Mb
-#target_compile_definitions(slower_boot2 PRIVATE CUSTOM_XIP_BASE=0x10ff0000)
+math(EXPR CUSTOM_XIP_BASE "1024 * (${FLASH_SIZE} - 64) + 0x10000000")
+message(STATUS "${CUSTOM_XIP_BASE}")
+target_compile_definitions(slower_boot2 PRIVATE CUSTOM_XIP_BASE=${CUSTOM_XIP_BASE})
 target_compile_definitions(slower_boot2 PRIVATE PICO_FLASH_SPI_CLKDIV=4)
 pico_set_boot_stage2(${PROJECT_NAME} slower_boot2)
 
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE FLASH_SIZE=${FLASH_SIZE})
 
 IF (TFT)
     target_link_libraries(${PROJECT_NAME} PRIVATE st7789)
