@@ -70,7 +70,7 @@ jobs:
           cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=OFF .. && cmake --build . &&\
           cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=ON  -DTFT=OFF .. && cmake --build . &&\
           cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=ON .. && cmake --build . &&\
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=ON -DILI9341=ON.. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=ON -DILI9341=ON .. && cmake --build . &&\
           cd .. && rm -rf build && mkdir build && cd build && echo 4096 &&\
           cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=OFF -DFLASH_SIZE=4096 .. && cmake --build . &&\
           cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=ON  -DTFT=OFF -DFLASH_SIZE=4096 .. && cmake --build . &&\
