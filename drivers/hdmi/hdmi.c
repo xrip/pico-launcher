@@ -604,7 +604,7 @@ void graphics_init() {
     hdmi_init();
 }
 
-void draw_text(char* string, uint32_t x, uint32_t y, uint8_t color, uint8_t bgcolor) {
+void draw_text(const char string[TEXTMODE_COLS], uint32_t x, uint32_t y, uint8_t color, uint8_t bgcolor) {
     uint8_t* t_buf = text_buffer + TEXTMODE_COLS * 2 * y + 2 * x;
     for (int xi = TEXTMODE_COLS * 2; xi--;) {
         if (!*string) break;
@@ -613,31 +613,41 @@ void draw_text(char* string, uint32_t x, uint32_t y, uint8_t color, uint8_t bgco
     }
 }
 
-void draw_window(char* title, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-    char textline[TEXTMODE_COLS];
+void draw_window(const char title[TEXTMODE_COLS], uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+    char line[width + 1];
+    memset(line, 0, sizeof line);
     width--;
     height--;
     // Рисуем рамки
-    // ═══
-    memset(textline, 0xCD, width);
-    // ╔ ╗ 188 ╝ 200 ╚
-    textline[0] = 0xC9;
-    textline[width] = 0xBB;
-    draw_text(textline, x, y, 11, 1);
-    draw_text(title, (width - strlen(title)) >> 1, 0, 0, 3);
-    textline[0] = 0xC8;
-    textline[width] = 0xBC;
-    draw_text(textline, x, height - y, 11, 1);
-    memset(textline, ' ', width);
-    textline[0] = textline[width] = 0xBA;
+
+    memset(line, 0xCD, width); // ═══
+
+
+    line[0] = 0xC9; // ╔
+    line[width] = 0xBB; // ╗
+    draw_text(line, x, y, 11, 1);
+
+    line[0] = 0xC8; // ╚
+    line[width] = 0xBC; //  ╝
+    draw_text(line, x, height + y, 11, 1);
+
+    memset(line, ' ', width);
+    line[0] = line[width] = 0xBA;
+
     for (int i = 1; i < height; i++) {
-        draw_text(textline, x, i, 11, 1);
+        draw_text(line, x, y + i, 11, 1);
     }
+
+    snprintf(line, width - 1, " %s ", title);
+    draw_text(line, x + (width - strlen(line)) / 2, y, 0, 3);
 }
 
-void clrScr(uint8_t color) {
-    memset(text_buffer, color, graphics_buffer_height * graphics_buffer_width);
-};
+void clrScr(const uint8_t color) {
+    uint16_t* t_buf = (uint16_t *)text_buffer;
+    int size = TEXTMODE_COLS * TEXTMODE_ROWS;
+
+    while (size--) *t_buf++ = color << 4 << 8 | ' ';
+}
 
 void graphics_set_bgcolor(uint32_t color888) //определяем зарезервированный цвет в палитре
 {
