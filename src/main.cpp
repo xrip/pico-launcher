@@ -3,6 +3,7 @@
 #include <hardware/clocks.h>
 #include <hardware/flash.h>
 #include <hardware/structs/vreg_and_chip_reset.h>
+#include <pico/bootrom.h>
 #include <pico/multicore.h>
 #include <pico/stdlib.h>
 
@@ -367,6 +368,10 @@ int main() {
     for (int i = 2; i--;) {
         nespad_read();
         sleep_ms(50);
+        if ((nespad_state & DPAD_START) != 0) {
+            reset_usb_boot(0, 0);
+            while (true) tight_loop_contents();
+        }
         if ((nespad_state & DPAD_SELECT) != 0) {
             sem_init(&vga_start_semaphore, 0, 1);
             multicore_launch_core1(render_core);
