@@ -135,12 +135,7 @@ bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
     }
 
     draw_text("Loading...", window_x + 1, window_y + 2, 10, 1);
-
-
-#if !TFT && !HDMI
     sleep_ms(500);
-#endif
-
 
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
         uint32_t flash_target_offset = 0;
