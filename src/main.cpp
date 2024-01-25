@@ -427,21 +427,6 @@ int main() {
             filebrowser("", "uf2");
         }
     }
-    // TODO: define a case to start card-reader
-    if (true) {
-        if (FR_OK !=  f_mount(&fs, "", 1)) {
-            draw_text((char*)"SD Card not inserted or SD Card error!", 0, 0, 12, 0);
-            sleep_ms(5000);
-            // reboot: wait for sd-card
-            watchdog_enable(100, true);
-            while(1);
-        } else {
-            init_pico_usb_drive();
-            while(!tud_msc_ejected()) {
-                pico_usb_drive_heartbeat();
-            }
-        }
-    }
 
     reboot_to_application();
 
