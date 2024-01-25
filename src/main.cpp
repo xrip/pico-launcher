@@ -53,13 +53,14 @@ uint8_t SCREEN[DISP_HEIGHT][DISP_WIDTH];
 
 
 uint32_t input;
-extern "C" {
-    bool handleScancode(uint32_t ps2scancode) {
-        if (ps2scancode)
-            input = ps2scancode;
 
-        return true;
-    }
+extern "C" {
+bool handleScancode(uint32_t ps2scancode) {
+    if (ps2scancode)
+        input = ps2scancode;
+
+    return true;
+}
 }
 
 void __time_critical_func(render_core)() {
@@ -118,7 +119,7 @@ void __always_inline reboot_to_application() {
     __builtin_unreachable();
 }
 
-void __not_in_flash_func(load_firmware)(const char pathname[256]) {
+bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
     UINT bytes_read = 0;
     struct UF2_Block_t uf2_block{};
     FIL file;
@@ -127,11 +128,18 @@ void __not_in_flash_func(load_firmware)(const char pathname[256]) {
     constexpr int window_x = (TEXTMODE_COLS - 43) / 2;
 
     draw_window((char*)"Loading firmware", window_x, window_y, 43, 5);
+
+    FILINFO fileinfo;
+    f_stat(pathname, &fileinfo);
+
+    if (FLASH_SIZE - 64 << 10 < fileinfo.fsize / 2) {
+        draw_text((char*)"ERROR: Firmware too large! Canceled!!", window_x + 1, window_y + 2, 13, 1);
+        sleep_ms(5000);
+        return false;
+    }
+
     draw_text((char*)"Loading...", window_x + 1, window_y + 2, 10, 1);
-    sleep_ms(100);
-#if !TFT && !HDMI
     sleep_ms(500);
-#endif
 
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
         uint32_t flash_target_offset = 0;
@@ -151,7 +159,7 @@ void __not_in_flash_func(load_firmware)(const char pathname[256]) {
 
                 //подмена загрузчика boot2 прошивки на записанный ранее
                 if (flash_target_offset == 0) {
-                    memcpy(buffer, (uint8_t *) XIP_BASE, 256);
+                    memcpy(buffer, (uint8_t *)XIP_BASE, 256);
                 }
 
                 flash_range_erase(flash_target_offset, FLASH_SECTOR_SIZE);
@@ -161,7 +169,8 @@ void __not_in_flash_func(load_firmware)(const char pathname[256]) {
 
                 flash_target_offset += FLASH_SECTOR_SIZE;
             }
-        } while (bytes_read != 0);
+        }
+        while (bytes_read != 0);
 
         restore_interrupts(ints);
         multicore_lockout_end_blocking();
@@ -169,6 +178,7 @@ void __not_in_flash_func(load_firmware)(const char pathname[256]) {
         gpio_put(PICO_DEFAULT_LED_PIN, true);
     }
     f_close(&file);
+    return true;
 }
 
 
@@ -193,9 +203,11 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
     DIR dir;
     FILINFO fileInfo;
 
-    if (FR_OK !=  f_mount(&fs, "", 1)) {
+    if (FR_OK != f_mount(&fs, "", 1)) {
         draw_text((char*)"SD Card not inserted or SD Card error!", 0, 0, 12, 0);
-        while (true) { sleep_ms(100); /*TODO: reboot? */ }
+        // reboot: wait for sd-card
+        watchdog_enable(100, true);
+        while(1);
     }
 
     while (true) {
@@ -209,25 +221,25 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
 #ifndef TFT
         draw_text(tmp, 0, 29, 0, 0);
         auto off = 0;
-        draw_text((char *) "START", off, 29, 7, 0);
+        draw_text((char *)"START", off, 29, 7, 0);
         off += 5;
-        draw_text((char *) " Run at cursor ", off, 29, 0, 3);
+        draw_text((char *)" Run at cursor ", off, 29, 0, 3);
         off += 16;
-        draw_text((char *) "SELECT", off, 29, 7, 0);
+        draw_text((char *)"SELECT", off, 29, 7, 0);
         off += 6;
-        draw_text((char *) " Run previous  ", off, 29, 0, 3);
+        draw_text((char *)" Run previous  ", off, 29, 0, 3);
         off += 16;
-        draw_text((char *) "ARROWS", off, 29, 7, 0);
+        draw_text((char *)"ARROWS", off, 29, 7, 0);
         off += 6;
-        draw_text((char *) " Navigation    ", off, 29, 0, 3);
+        draw_text((char *)" Navigation    ", off, 29, 0, 3);
         off += 16;
-        draw_text((char *) "A/Z", off, 29, 7, 0);
+        draw_text((char *)"A/Z", off, 29, 7, 0);
         off += 3;
-        draw_text((char *) " USB DRV ", off, 29, 0, 3);
+        draw_text((char *)" USB DRV ", off, 29, 0, 3);
 #endif
 
         if (FR_OK != f_opendir(&dir, basepath)) {
-            draw_text((char *) "Failed to open directory", 1, 1, 4, 0);
+            draw_text((char *)"Failed to open directory", 1, 1, 4, 0);
             while (true) { sleep_ms(100); }
         }
 
@@ -257,7 +269,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
 
 
         if (total_files > max_files) {
-            draw_text((char *) " Too many files!! ", TEXTMODE_COLS - 17, 0, 12, 3);
+            draw_text((char *)" Too many files!! ", TEXTMODE_COLS - 17, 0, 12, 3);
         }
 
         int offset = 0;
@@ -278,7 +290,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
             // F10
             if (nespad_state & DPAD_A || input == 0x44) {
                 clrScr(1);
-                draw_text((char *) "Mount me as USB drive...", 30, 15, 7, 1);
+                draw_text((char *)"Mount me as USB drive...", 30, 15, 7, 1);
                 //in_flash_drive();
             }
 
@@ -286,7 +298,8 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
                 if (offset + (current_item + 1) < total_files) {
                     if (current_item + 1 < per_page) {
                         current_item++;
-                    } else {
+                    }
+                    else {
                         offset++;
                     }
                 }
@@ -295,7 +308,8 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
             if (nespad_state & DPAD_UP || input == 0x48) {
                 if (current_item > 0) {
                     current_item--;
-                } else if (offset > 0) {
+                }
+                else if (offset > 0) {
                     offset--;
                 }
             }
@@ -310,13 +324,14 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
             if (nespad_state & DPAD_LEFT || input == 0x4B) {
                 if (offset > per_page) {
                     offset -= per_page;
-                } else {
+                }
+                else {
                     offset = 0;
                     current_item = 0;
                 }
             }
 
-            if (debounce && ((nespad_state & DPAD_START) != 0  || input == 0x1C)) {
+            if (debounce && ((nespad_state & DPAD_START) != 0 || input == 0x1C)) {
                 auto file_at_cursor = fileItems[offset + current_item];
 
                 if (file_at_cursor.is_directory) {
@@ -326,7 +341,8 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
                             const size_t length = lastBackslash - basepath;
                             basepath[length] = '\0';
                         }
-                    } else {
+                    }
+                    else {
                         sprintf(basepath, "%s\\%s", basepath, file_at_cursor.filename);
                     }
                     debounce = false;
@@ -335,7 +351,10 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
 
                 if (file_at_cursor.is_executable) {
                     sprintf(tmp, "%s\\%s", basepath, file_at_cursor.filename);
-                    return load_firmware(tmp);
+
+                    if (load_firmware(tmp)) {
+                        return;
+                    }
                 }
             }
 
@@ -385,17 +404,18 @@ int main() {
         sleep_ms(50);
 
         // F12 Boot to USB FIRMWARE UPDATE mode
-        if ((nespad_state & DPAD_START) != 0 || input == 0x58 ) {
+        if (nespad_state & DPAD_START || input == 0x58) {
             reset_usb_boot(0, 0);
         }
 
         // F11 Run launcher
-        if ((nespad_state & DPAD_SELECT) != 0 || input == 0x57) {
+        if (nespad_state & DPAD_SELECT || input == 0x57) {
             sem_init(&vga_start_semaphore, 0, 1);
             multicore_launch_core1(render_core);
             sem_release(&vga_start_semaphore);
 
             sleep_ms(250);
+
             filebrowser("", "uf2");
         }
     }

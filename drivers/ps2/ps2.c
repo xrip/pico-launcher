@@ -142,7 +142,7 @@ int16_t keyboard_send(uint8_t data) {
     data_lo();
     wait_us(200);
     clock_hi();
-    WAIT(clock_lo, 15000, 1);   // 10ms [5]p.50
+    WAIT(clock_lo, 15000, 1); // 10ms [5]p.50
 
     /* Data bit[2-9] */
     for (uint8_t i = 0; i < 8; i++) {
@@ -150,7 +150,8 @@ int16_t keyboard_send(uint8_t data) {
         if (data & (1 << i)) {
             parity = !parity;
             data_hi();
-        } else {
+        }
+        else {
             data_lo();
         }
         WAIT(clock_hi, 100, (int16_t) (2 + i * 0x10));
@@ -159,7 +160,8 @@ int16_t keyboard_send(uint8_t data) {
 
     /* Parity bit */
     wait_us(15);
-    if (parity) { data_hi(); } else { data_lo(); }
+    if (parity) { data_hi(); }
+    else { data_lo(); }
     WAIT(clock_hi, 100, 4);
     WAIT(clock_lo, 100, 5);
 
@@ -168,7 +170,7 @@ int16_t keyboard_send(uint8_t data) {
     data_hi();
 
     /* Ack */
-    WAIT(data_lo, 100, 6);    // check Ack
+    WAIT(data_lo, 100, 6); // check Ack
     WAIT(data_hi, 100, 7);
     WAIT(clock_hi, 100, 8);
 
@@ -177,7 +179,7 @@ int16_t keyboard_send(uint8_t data) {
     idle();
     int_on();
     return ps2_recv_response();
-    ERROR:
+ERROR:
     printf("KBD error %02X \r\n", ps2_error);
     ps2_error = 0;
     idle();
@@ -307,7 +309,7 @@ void keyboard_init(void) {
     gpio_set_dir(KBD_DATA_PIN, GPIO_IN);
 
     gpio_set_irq_enabled_with_callback(KBD_CLOCK_PIN, GPIO_IRQ_EDGE_FALL, true,
-                                       (gpio_irq_callback_t) &KeyboardHandler); //
+                                       (gpio_irq_callback_t)&KeyboardHandler); //
 
     // Blink all 3 leds
     //ps2_send(0xFF); //Reset and start self-test
@@ -325,9 +327,9 @@ void keyboard_init(void) {
     sleep_ms(50);
     ps2_send(3); // SCROLL
 */
-/*    ps2_send(0xED);
-    sleep_ms(50);
-    ps2_send(7);*/
+    /*    ps2_send(0xED);
+        sleep_ms(50);
+        ps2_send(7);*/
 
     return;
 }
@@ -335,6 +337,7 @@ void keyboard_init(void) {
 extern uint16_t portram[256];
 
 extern void doirq(uint8_t irqnum);
+
 extern bool handleScancode(uint32_t ps2scancode);
 
 void ps2poll() {
