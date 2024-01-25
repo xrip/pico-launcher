@@ -23,6 +23,7 @@ uint8_t manager_started = false;
 
 #include "ps2.h"
 #include "usb.h"
+#include "hardware/watchdog.h"
 }
 
 #include "ff.h"
@@ -400,9 +401,17 @@ int main() {
     }
     // TODO: define a case to start card-reader
     if (true) {
-        init_pico_usb_drive();
-        while(!tud_msc_ejected()) {
-            pico_usb_drive_heartbeat();
+        if (FR_OK !=  f_mount(&fs, "", 1)) {
+            draw_text((char*)"SD Card not inserted or SD Card error!", 0, 0, 12, 0);
+            sleep_ms(5000);
+            // reboot: wait for sd-card
+            watchdog_enable(100, true);
+            while(1);
+        } else {
+            init_pico_usb_drive();
+            while(!tud_msc_ejected()) {
+                pico_usb_drive_heartbeat();
+            }
         }
     }
 
