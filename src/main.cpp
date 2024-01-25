@@ -22,6 +22,8 @@ uint8_t manager_started = false;
 #endif
 
 #include "ps2.h"
+#include "usb.h"
+#include "hardware/watchdog.h"
 }
 
 #include "ff.h"
@@ -77,7 +79,9 @@ void __time_critical_func(render_core)() {
     // 60 FPS loop
 #define frame_tick (16666)
     uint64_t tick = time_us_64();
+#ifdef TFT
     uint64_t last_renderer_tick = tick;
+#endif
     uint64_t last_input_tick = tick;
     while (true) {
 #ifdef TFT
@@ -123,18 +127,18 @@ bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
     constexpr int window_y = (TEXTMODE_ROWS - 5) / 2;
     constexpr int window_x = (TEXTMODE_COLS - 43) / 2;
 
-    draw_window("Loading firmware", window_x, window_y, 43, 5);
+    draw_window((char*)"Loading firmware", window_x, window_y, 43, 5);
 
     FILINFO fileinfo;
     f_stat(pathname, &fileinfo);
 
     if (FLASH_SIZE - 64 << 10 < fileinfo.fsize / 2) {
-        draw_text("ERROR: Firmware too large! Canceled!!", window_x + 1, window_y + 2, 13, 1);
+        draw_text((char*)"ERROR: Firmware too large! Canceled!!", window_x + 1, window_y + 2, 13, 1);
         sleep_ms(5000);
         return false;
     }
 
-    draw_text("Loading...", window_x + 1, window_y + 2, 10, 1);
+    draw_text((char*)"Loading...", window_x + 1, window_y + 2, 10, 1);
     sleep_ms(500);
 
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
@@ -200,8 +204,10 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
     FILINFO fileInfo;
 
     if (FR_OK != f_mount(&fs, "", 1)) {
-        draw_text("SD Card not inserted or SD Card error!", 0, 0, 12, 0);
-        while (true) { sleep_ms(100); /*TODO: reboot? */ }
+        draw_text((char*)"SD Card not inserted or SD Card error!", 0, 0, 12, 0);
+        // reboot: wait for sd-card
+        watchdog_enable(100, true);
+        while(1);
     }
 
     while (true) {
@@ -411,6 +417,21 @@ int main() {
             sleep_ms(250);
 
             filebrowser("", "uf2");
+        }
+    }
+    // TODO: define a case to start card-reader
+    if (true) {
+        if (FR_OK !=  f_mount(&fs, "", 1)) {
+            draw_text((char*)"SD Card not inserted or SD Card error!", 0, 0, 12, 0);
+            sleep_ms(5000);
+            // reboot: wait for sd-card
+            watchdog_enable(100, true);
+            while(1);
+        } else {
+            init_pico_usb_drive();
+            while(!tud_msc_ejected()) {
+                pico_usb_drive_heartbeat();
+            }
         }
     }
 
