@@ -3,6 +3,7 @@
 #include <hardware/clocks.h>
 #include <hardware/flash.h>
 #include <hardware/structs/vreg_and_chip_reset.h>
+#include <pico/bootrom.h>
 #include <pico/multicore.h>
 #include <pico/stdlib.h>
 
@@ -22,7 +23,6 @@ uint8_t manager_started = false;
 
 #include "ps2.h"
 }
-
 
 #include "ff.h"
 #include "nespad.h"
@@ -49,6 +49,17 @@ struct UF2_Block_t {
 
 uint8_t SCREEN[DISP_HEIGHT][DISP_WIDTH];
 
+
+uint32_t input;
+extern "C" {
+    bool handleScancode(uint32_t ps2scancode) {
+        if (ps2scancode)
+            input = ps2scancode;
+
+        return true;
+    }
+}
+
 void __time_critical_func(render_core)() {
     multicore_lockout_victim_init();
     graphics_init();
@@ -62,7 +73,6 @@ void __time_critical_func(render_core)() {
     clrScr(1);
 
     sem_acquire_blocking(&vga_start_semaphore);
-#if 1
     // 60 FPS loop
 #define frame_tick (16666)
     uint64_t tick = time_us_64();
@@ -86,7 +96,6 @@ void __time_critical_func(render_core)() {
     }
 
     __unreachable();
-#endif
 }
 
 void __always_inline reboot_to_application() {
@@ -114,8 +123,8 @@ void __not_in_flash_func(load_firmware)(const char pathname[256]) {
     constexpr int window_y = (TEXTMODE_ROWS - 5) / 2;
     constexpr int window_x = (TEXTMODE_COLS - 43) / 2;
 
-    draw_window((char*)"Loading firmware", window_x, window_y, 43, 5);
-    draw_text((char*)"Loading...", window_x + 1, window_y + 2, 10, 1);
+    draw_window("Loading firmware", window_x, window_y, 43, 5);
+    draw_text("Loading...", window_x + 1, window_y + 2, 10, 1);
     sleep_ms(100);
 
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
@@ -180,7 +189,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
     FILINFO fileInfo;
 
     if (FR_OK !=  f_mount(&fs, "", 1)) {
-        draw_text((char*)"SD Card not inserted or SD Card error!", 0, 0, 12, 0);
+        draw_text("SD Card not inserted or SD Card error!", 0, 0, 12, 0);
         while (true) { sleep_ms(100); /*TODO: reboot? */ }
     }
 
@@ -253,23 +262,24 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
             sleep_ms(100);
 
             if (!debounce) {
-                debounce = (nespad_state & DPAD_START) == 0;
+                debounce = !(nespad_state & DPAD_START) && input != 0x1C;
             }
 
-            if ((nespad_state & DPAD_START) != 0) {
-                gpio_put(PICO_DEFAULT_LED_PIN, true);
-                // watchdog_enable(100, true);
+            // ESCAPE
+            if (nespad_state & DPAD_B || input == 0x01) {
+                return;
             }
 
-            if (nespad_state & DPAD_A) {
+            // F10
+            if (nespad_state & DPAD_A || input == 0x44) {
                 clrScr(1);
                 draw_text((char *) "Mount me as USB drive...", 30, 15, 7, 1);
                 //in_flash_drive();
             }
 
-            if ((nespad_state & DPAD_DOWN) != 0) {
-                if ((offset + (current_item + 1) < total_files)) {
-                    if ((current_item + 1) < per_page) {
+            if (nespad_state & DPAD_DOWN || input == 0x50) {
+                if (offset + (current_item + 1) < total_files) {
+                    if (current_item + 1 < per_page) {
                         current_item++;
                     } else {
                         offset++;
@@ -277,7 +287,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
                 }
             }
 
-            if ((nespad_state & DPAD_UP) != 0) {
+            if (nespad_state & DPAD_UP || input == 0x48) {
                 if (current_item > 0) {
                     current_item--;
                 } else if (offset > 0) {
@@ -285,14 +295,14 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
                 }
             }
 
-            if ((nespad_state & DPAD_RIGHT) != 0) {
+            if (nespad_state & DPAD_RIGHT || input == 0x4D || input == 0x7A) {
                 offset += per_page;
                 if (offset + (current_item + 1) > total_files) {
                     offset = total_files - (current_item + 1);
                 }
             }
 
-            if ((nespad_state & DPAD_LEFT) != 0) {
+            if (nespad_state & DPAD_LEFT || input == 0x4B) {
                 if (offset > per_page) {
                     offset -= per_page;
                 } else {
@@ -301,14 +311,14 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
                 }
             }
 
-            if (debounce && (nespad_state & DPAD_START) != 0) {
+            if (debounce && ((nespad_state & DPAD_START) != 0  || input == 0x1C)) {
                 auto file_at_cursor = fileItems[offset + current_item];
 
                 if (file_at_cursor.is_directory) {
                     if (strcmp(file_at_cursor.filename, "..") == 0) {
                         const char* lastBackslash = strrchr(basepath, '\\');
                         if (lastBackslash != nullptr) {
-                            size_t length = lastBackslash - basepath;
+                            const size_t length = lastBackslash - basepath;
                             basepath[length] = '\0';
                         }
                     } else {
@@ -362,12 +372,20 @@ int main() {
     set_sys_clock_khz(378 * 1000, true);
 
     keyboard_init();
+    keyboard_send(0xFF);
     nespad_begin(clock_get_hz(clk_sys) / 1000, NES_GPIO_CLK, NES_GPIO_DATA, NES_GPIO_LAT);
 
-    for (int i = 2; i--;) {
+    for (int i = 200; i--;) {
         nespad_read();
-        sleep_ms(50);
-        if ((nespad_state & DPAD_SELECT) != 0 || ps2getcode() != 0) {
+        sleep_ms(5);
+
+        // F12 Boot to USB FIRMWARE UPDATE mode
+        if ((nespad_state & DPAD_START) != 0 || input == 0x58 ) {
+            reset_usb_boot(0, 0);
+        }
+
+        // F11 Run launcher
+        if ((nespad_state & DPAD_SELECT) != 0 || input == 0x57) {
             sem_init(&vga_start_semaphore, 0, 1);
             multicore_launch_core1(render_core);
             sem_release(&vga_start_semaphore);
@@ -376,7 +394,6 @@ int main() {
             filebrowser("", "uf2");
         }
     }
-
 
     reboot_to_application();
 

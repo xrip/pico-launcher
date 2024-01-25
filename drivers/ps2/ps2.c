@@ -338,16 +338,15 @@ extern void doirq(uint8_t irqnum);
 extern bool handleScancode(uint32_t ps2scancode);
 
 void ps2poll() {
-    uint32_t ps2scancode;
-    ps2scancode = ps2getcode();
+    uint32_t ps2scancode = ps2getcode();
     if (!ps2scancode) {
         return;
     }
-#if 0
+
     if (handleScancode(ps2scancode)) {
         return;
     }
-
+#if 0
     portram[0x60] = ps2scancode;
     // char tmp[20]; sprintf(tmp, "sc: 0x%X", ps2scancode); logMsg(tmp);
     portram[0x64] |= 2;
