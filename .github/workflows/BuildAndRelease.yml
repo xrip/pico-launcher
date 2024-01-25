@@ -48,7 +48,7 @@ jobs:
                echo "The string starts with 'refs/tags/'."
                tag="${input_string#$prefix}"     
                echo "Tag is ${tag}"
-               sed -i "s/^[[:space:]]*pico_set_program_version(.*/pico_set_program_version(${PROJECT_NAME} \"$tag\")/" CMakeLists.txt   
+               sed -i "s/^[[:space:]]*pico_set_program_version(.*/pico_set_program_version(\$\{PROJECT_NAME\} \"$tag\")/" CMakeLists.txt   
           else
                echo "The string does not start with 'refs/tags/'."
           fi
