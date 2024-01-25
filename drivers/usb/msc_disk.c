@@ -127,12 +127,7 @@ bool tud_msc_is_writable_cb(uint8_t lun) {
 // Process data in buffer to disk's storage and return number of written bytes
 int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize) {
     // char tmp[80]; sprintf(tmp, "tud_msc_write10_cb(%d, %d, %d, %d)", lun, lba, offset, bufsize); logMsg(tmp);
-    switch (lun) {
-        case 3: {
-            return disk_write(0, buffer, lba, 1) == 0 ? bufsize : -1;
-        }
-    }
-    return (int32_t)bufsize;
+    return disk_write(0, buffer, lba, 1) == 0 ? bufsize : -1;
 }
 
 // Callback invoked when received an SCSI command not in built-in list below
@@ -165,4 +160,3 @@ int32_t tud_msc_scsi_cb(uint8_t lun, uint8_t const scsi_cmd[16], void* buffer, u
     }
     return (int32_t)resplen;
 }
-
