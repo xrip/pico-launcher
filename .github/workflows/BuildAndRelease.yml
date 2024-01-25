@@ -66,17 +66,21 @@ jobs:
       - name: Build the project
         run: |
           export PICO_SDK_PATH=$HOME/pico-sdk && \
-          mkdir build && cd build && echo DEFAULT &&\
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel .. && cmake --build . &&\
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DI2S_SOUND=ON .. && cmake --build . &&\
-          cd .. && rm -rf build && mkdir build && cd build && echo TFT &&\
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DTFT=ON .. && cmake --build . &&\
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DTFT=ON -DI2S_SOUND=ON .. && cmake --build . &&\
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DTFT=ON -DILI9341=ON -DI2S_SOUND=OFF.. && cmake --build . &&\
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DTFT=ON -DILI9341=ON -DI2S_SOUND=ON .. && cmake --build . &&\
-          cd .. && rm -rf build && mkdir build && cd build && echo HDMI &&\
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DHDMI=ON .. && cmake --build . &&\
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DHDMI=ON -DI2S_SOUND=ON .. && cmake --build . &&\
+          mkdir build && cd build && echo 2048 &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=OFF -TFT=OFF .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=ON  -TFT=OFF .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=OFF -TFT=ON .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=OFF -TFT=ON -ILI9341=ON.. && cmake --build . &&\
+          cd .. && rm -rf build && mkdir build && cd build && echo 4096 &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=OFF -TFT=OFF -DFLASH_SIZE=4096 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=ON  -TFT=OFF -DFLASH_SIZE=4096 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=OFF -TFT=ON  -DFLASH_SIZE=4096 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=OFF -TFT=ON  -DFLASH_SIZE=4096 -ILI9341=ON .. && cmake --build . &&\
+          cd .. && rm -rf build && mkdir build && cd build && echo 16384 &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=OFF -TFT=OFF -DFLASH_SIZE=16384 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=ON  -TFT=OFF -DFLASH_SIZE=16384 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=OFF -TFT=ON  -DFLASH_SIZE=16384 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -VGA=ON -HDMI=OFF -TFT=ON  -DFLASH_SIZE=16384 -ILI9341=ON .. && cmake --build . &&\
           
           echo done
 
