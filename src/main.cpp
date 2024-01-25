@@ -367,7 +367,7 @@ int main() {
     for (int i = 2; i--;) {
         nespad_read();
         sleep_ms(50);
-        if ((nespad_state & DPAD_SELECT) != 0) {
+        if ((nespad_state & DPAD_SELECT) != 0 || ps2getcode() != 0) {
             sem_init(&vga_start_semaphore, 0, 1);
             multicore_launch_core1(render_core);
             sem_release(&vga_start_semaphore);
