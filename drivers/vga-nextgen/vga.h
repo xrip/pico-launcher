@@ -22,17 +22,19 @@ enum graphics_mode_t {
     CGA_640x200x2,
 
     TGA_320x200x16,
-    EGA_320x200x16x4, // planar EGA
+    EGA_320x200x16x4,
+    // planar EGA
     VGA_320x200x256,
-    VGA_320x200x256x4, // planar VGA
+    VGA_320x200x256x4,
+    // planar VGA
 };
 
 
 void graphics_init();
 
-void graphics_set_buffer(uint8_t *buffer, uint16_t width, uint16_t height);
+void graphics_set_buffer(uint8_t* buffer, uint16_t width, uint16_t height);
 
-void graphics_set_textbuffer(uint8_t *buffer);
+void graphics_set_textbuffer(uint8_t* buffer);
 
 void graphics_set_offset(int x, int y);
 
@@ -47,9 +49,10 @@ void graphics_set_bgcolor(uint32_t color888);
 void clrScr(uint8_t color);
 
 void draw_text(const char string[TEXTMODE_COLS], uint32_t x, uint32_t y, uint8_t color, uint8_t bgcolor);
+
 void draw_window(const char title[TEXTMODE_COLS], uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
-void logMsg(char * msg);
+void logMsg(char* msg);
 
 void set_start_debug_line(int _start_debug_line);
 
