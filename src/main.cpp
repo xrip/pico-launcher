@@ -398,12 +398,12 @@ int main() {
         sleep_ms(50);
 
         // F12 Boot to USB FIRMWARE UPDATE mode
-        if ((nespad_state & DPAD_START) != 0 || input == 0x58) {
+        if (nespad_state & DPAD_START || input == 0x58) {
             reset_usb_boot(0, 0);
         }
 
         // F11 Run launcher
-        if ((nespad_state & DPAD_SELECT) != 0 || input == 0x57) {
+        if (nespad_state & DPAD_SELECT || input == 0x57) {
             sem_init(&vga_start_semaphore, 0, 1);
             multicore_launch_core1(render_core);
             sem_release(&vga_start_semaphore);
