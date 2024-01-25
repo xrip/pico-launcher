@@ -116,7 +116,6 @@ void __always_inline reboot_to_application() {
 
 void __not_in_flash_func(load_firmware)(const char pathname[256]) {
     UINT bytes_read = 0;
-    uint8_t buffer[FLASH_SECTOR_SIZE];
     struct UF2_Block_t uf2_block{};
     FIL file;
 
@@ -125,18 +124,19 @@ void __not_in_flash_func(load_firmware)(const char pathname[256]) {
 
     draw_window("Loading firmware", window_x, window_y, 43, 5);
     draw_text("Loading...", window_x + 1, window_y + 2, 10, 1);
-    sleep_ms(100);
+#if !TFT && !HDMI
+    sleep_ms(500);
+#endif
 
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
         uint32_t flash_target_offset = 0;
         uint32_t data_sector_index = 0;
-        FILINFO fileinfo;
-        f_stat(pathname, &fileinfo);
 
         multicore_lockout_start_blocking();
         const uint32_t ints = save_and_disable_interrupts();
 
         do {
+            uint8_t buffer[FLASH_SECTOR_SIZE];
             f_read(&file, &uf2_block, sizeof uf2_block, &bytes_read);
             memcpy(buffer + data_sector_index, uf2_block.data, 256);
             data_sector_index += 256;
