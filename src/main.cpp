@@ -116,7 +116,6 @@ void __always_inline reboot_to_application() {
 
 void __not_in_flash_func(load_firmware)(const char pathname[256]) {
     UINT bytes_read = 0;
-    uint8_t buffer[FLASH_SECTOR_SIZE];
     struct UF2_Block_t uf2_block{};
     FIL file;
 
@@ -126,17 +125,19 @@ void __not_in_flash_func(load_firmware)(const char pathname[256]) {
     draw_window((char*)"Loading firmware", window_x, window_y, 43, 5);
     draw_text((char*)"Loading...", window_x + 1, window_y + 2, 10, 1);
     sleep_ms(100);
+#if !TFT && !HDMI
+    sleep_ms(500);
+#endif
 
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
         uint32_t flash_target_offset = 0;
         uint32_t data_sector_index = 0;
-        FILINFO fileinfo;
-        f_stat(pathname, &fileinfo);
 
         multicore_lockout_start_blocking();
         const uint32_t ints = save_and_disable_interrupts();
 
         do {
+            uint8_t buffer[FLASH_SECTOR_SIZE];
             f_read(&file, &uf2_block, sizeof uf2_block, &bytes_read);
             memcpy(buffer + data_sector_index, uf2_block.data, 256);
             data_sector_index += 256;
@@ -372,12 +373,12 @@ int main() {
     set_sys_clock_khz(378 * 1000, true);
 
     keyboard_init();
-    keyboard_send(0xFF);
+    //keyboard_send(0xFF);
     nespad_begin(clock_get_hz(clk_sys) / 1000, NES_GPIO_CLK, NES_GPIO_DATA, NES_GPIO_LAT);
 
-    for (int i = 200; i--;) {
+    for (int i = 20; i--;) {
         nespad_read();
-        sleep_ms(5);
+        sleep_ms(50);
 
         // F12 Boot to USB FIRMWARE UPDATE mode
         if ((nespad_state & DPAD_START) != 0 || input == 0x58 ) {
