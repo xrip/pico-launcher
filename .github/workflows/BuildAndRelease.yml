@@ -1,0 +1,96 @@
+name: Build and create a release when tag is pushed
+
+# Only deploy when a new tag is pushed
+on:
+  push:
+    tags:
+      - "v*.*-alpha"
+      - "v*.*.*"
+  #     branches: [ master ]
+  # pull_request:
+  #     branches: [ master ]
+
+# Must match the project() name in CMakeLists.txt
+env:
+  APP_NAME: dendy
+
+# Allow this workflow to write back to the repository
+permissions:
+  contents: write
+
+# Build binary and send to releases
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    name: Build and release
+    steps:
+
+      - name: Install dependencies
+        run: |
+          sudo apt update && \
+          sudo apt install -y git python3 && \
+          sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libusb-1.0-0-dev && \
+          sudo apt install -y ninja-build
+
+      - name: Check out this repository
+        uses: actions/checkout@v3
+
+      - name: Print Working directory
+        run: echo $HOME && pwd && ls -la
+
+      - name: Update line containing pico_set_program_version() in CMakelists.txt with tag name.
+        run: |
+          # Extract the tag name that triggered the event and remove the 'refs/tags/' prefix
+          input_string=${{ github.ref }}
+          prefix="refs/tags/"
+          tag="No versioninfo found"
+          if [[ $input_string == $prefix* ]]; then
+               echo "The string starts with 'refs/tags/'."
+               tag="${input_string#$prefix}"     
+               echo "Tag is ${tag}"
+               sed -i "s/^[[:space:]]*pico_set_program_version(.*/pico_set_program_version(\$\{PROJECT_NAME\} \"$tag\")/" CMakeLists.txt   
+          else
+               echo "The string does not start with 'refs/tags/'."
+          fi
+          grep "pico_set_program_version" CMakeLists.txt
+
+      - name: Install Pico SDk
+        run: |
+          cd $HOME && \
+          git clone https://github.com/raspberrypi/pico-sdk.git --branch master && \
+          cd pico-sdk/ && \
+           git submodule update --init && \
+           cd lib/tinyusb &&
+           git checkout 08f9ed67c92421cbd0bc09270d2f363886681866
+
+      - name: Build the project
+        run: |
+          export PICO_SDK_PATH=$HOME/pico-sdk && \
+          mkdir build && cd build && echo 2048 &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=OFF .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=ON  -DTFT=OFF .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=ON .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=ON -DILI9341=ON .. && cmake --build . &&\
+          cd .. && rm -rf build && mkdir build && cd build && echo 4096 &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=OFF -DFLASH_SIZE=4096 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=ON  -DTFT=OFF -DFLASH_SIZE=4096 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=ON  -DFLASH_SIZE=4096 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=ON  -DFLASH_SIZE=4096 -DILI9341=ON .. && cmake --build . &&\
+          cd .. && rm -rf build && mkdir build && cd build && echo 16384 &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=OFF -DFLASH_SIZE=16384 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=ON  -DTFT=OFF -DFLASH_SIZE=16384 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=ON  -DFLASH_SIZE=16384 .. && cmake --build . &&\
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel -DVGA=ON -DHDMI=OFF -DTFT=ON  -DFLASH_SIZE=16384 -DILI9341=ON .. && cmake --build . &&\
+          
+          echo done
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            bin/MinSizeRel/**.uf2
+
+          body_path: CHANGELOG.md
+          
+         
