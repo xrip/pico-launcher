@@ -289,9 +289,17 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
 
             // F10
             if (nespad_state & DPAD_A || input == 0x44) {
-                clrScr(1);
-                draw_text((char *)"Mount me as USB drive...", 30, 15, 7, 1);
-                //in_flash_drive();
+                draw_window("SD Cardreader mode ", 5, 13, 40, 4);
+                draw_text("Mounting SD Card. Use safe eject ", 6, 14, 13, 1);
+                draw_text("to conitinue...", 6, 15, 13, 1);
+
+                sleep_ms(500);
+
+                init_pico_usb_drive();
+
+                while(!tud_msc_ejected()) {
+                    pico_usb_drive_heartbeat();
+                }
             }
 
             if (nespad_state & DPAD_DOWN || input == 0x50) {
@@ -417,21 +425,6 @@ int main() {
             sleep_ms(250);
 
             filebrowser("", "uf2");
-        }
-    }
-    // TODO: define a case to start card-reader
-    if (true) {
-        if (FR_OK !=  f_mount(&fs, "", 1)) {
-            draw_text((char*)"SD Card not inserted or SD Card error!", 0, 0, 12, 0);
-            sleep_ms(5000);
-            // reboot: wait for sd-card
-            watchdog_enable(100, true);
-            while(1);
-        } else {
-            init_pico_usb_drive();
-            while(!tud_msc_ejected()) {
-                pico_usb_drive_heartbeat();
-            }
         }
     }
 
