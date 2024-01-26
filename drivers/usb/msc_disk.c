@@ -60,7 +60,7 @@ bool tud_msc_test_unit_ready_cb(uint8_t lun) {
     return true;
 }
 
-bool tud_msc_ejected() {
+inline bool tud_msc_ejected() {
     return ejectedDrv;
 }
 

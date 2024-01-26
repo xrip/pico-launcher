@@ -55,7 +55,7 @@ uint8_t SCREEN[DISP_HEIGHT][DISP_WIDTH];
 uint32_t input;
 
 extern "C" {
-bool handleScancode(uint32_t ps2scancode) {
+bool handleScancode(const uint32_t ps2scancode) {
     if (ps2scancode)
         input = ps2scancode;
 
@@ -116,7 +116,7 @@ void __always_inline reboot_to_application() {
         :: [start] "r" (XIP_BASE + 0x100), [vtable] "X" (PPB_BASE + M0PLUS_VTOR_OFFSET)
     );
 
-    __builtin_unreachable();
+    __unreachable();
 }
 
 bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
@@ -127,18 +127,18 @@ bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
     constexpr int window_y = (TEXTMODE_ROWS - 5) / 2;
     constexpr int window_x = (TEXTMODE_COLS - 43) / 2;
 
-    draw_window((char*)"Loading firmware", window_x, window_y, 43, 5);
+    draw_window("Loading firmware", window_x, window_y, 43, 5);
 
     FILINFO fileinfo;
     f_stat(pathname, &fileinfo);
 
     if (FLASH_SIZE - 64 << 10 < fileinfo.fsize / 2) {
-        draw_text((char*)"ERROR: Firmware too large! Canceled!!", window_x + 1, window_y + 2, 13, 1);
+        draw_text("ERROR: Firmware too large! Canceled!!", window_x + 1, window_y + 2, 13, 1);
         sleep_ms(5000);
         return false;
     }
 
-    draw_text((char*)"Loading...", window_x + 1, window_y + 2, 10, 1);
+    draw_text("Loading...", window_x + 1, window_y + 2, 10, 1);
     sleep_ms(500);
 
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
@@ -154,7 +154,7 @@ bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
             memcpy(buffer + data_sector_index, uf2_block.data, 256);
             data_sector_index += 256;
 
-            if ((data_sector_index == FLASH_SECTOR_SIZE) || (bytes_read == 0)) {
+            if (data_sector_index == FLASH_SECTOR_SIZE || bytes_read == 0) {
                 data_sector_index = 0;
 
                 //подмена загрузчика boot2 прошивки на записанный ранее
@@ -204,10 +204,10 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
     FILINFO fileInfo;
 
     if (FR_OK != f_mount(&fs, "", 1)) {
-        draw_text((char*)"SD Card not inserted or SD Card error!", 0, 0, 12, 0);
+        draw_text("SD Card not inserted or SD Card error!", 0, 0, 12, 0);
         // reboot: wait for sd-card
         watchdog_enable(100, true);
-        while(1);
+        while(true);
     }
 
     while (true) {
@@ -221,26 +221,26 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
 #ifndef TFT
         draw_text(tmp, 0, 29, 0, 0);
         auto off = 0;
-        draw_text((char *)"START", off, 29, 7, 0);
+        draw_text("START", off, 29, 7, 0);
         off += 5;
-        draw_text((char *)" Run at cursor ", off, 29, 0, 3);
+        draw_text(" Run at cursor ", off, 29, 0, 3);
         off += 16;
-        draw_text((char *)"SELECT", off, 29, 7, 0);
+        draw_text("SELECT", off, 29, 7, 0);
         off += 6;
-        draw_text((char *)" Run previous  ", off, 29, 0, 3);
+        draw_text(" Run previous  ", off, 29, 0, 3);
         off += 16;
-        draw_text((char *)"ARROWS", off, 29, 7, 0);
+        draw_text("ARROWS", off, 29, 7, 0);
         off += 6;
-        draw_text((char *)" Navigation    ", off, 29, 0, 3);
+        draw_text(" Navigation    ", off, 29, 0, 3);
         off += 16;
-        draw_text((char *)"A/Z", off, 29, 7, 0);
+        draw_text("A/Z", off, 29, 7, 0);
         off += 3;
-        draw_text((char *)" USB DRV ", off, 29, 0, 3);
+        draw_text(" USB DRV ", off, 29, 0, 3);
 #endif
 
         if (FR_OK != f_opendir(&dir, basepath)) {
-            draw_text((char *)"Failed to open directory", 1, 1, 4, 0);
-            while (true) { sleep_ms(100); }
+            draw_text("Failed to open directory", 1, 1, 4, 0);
+            while(true);
         }
 
         if (strlen(basepath) > 0) {
@@ -269,7 +269,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
 
 
         if (total_files > max_files) {
-            draw_text((char *)" Too many files!! ", TEXTMODE_COLS - 17, 0, 12, 3);
+            draw_text(" Too many files!! ", TEXTMODE_COLS - 17, 0, 12, 3);
         }
 
         int offset = 0;
@@ -289,9 +289,11 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
 
             // F10
             if (nespad_state & DPAD_A || input == 0x44) {
-                draw_window("SD Cardreader mode ", 5, 13, 40, 4);
-                draw_text("Mounting SD Card. Use safe eject ", 6, 14, 13, 1);
-                draw_text("to conitinue...", 6, 15, 13, 1);
+                constexpr int window_x = (TEXTMODE_COLS - 40) / 2;
+                constexpr int window_y = (TEXTMODE_ROWS - 4) / 2;
+                draw_window("SD Cardreader mode ", window_x, window_y, 40, 4);
+                draw_text("Mounting SD Card. Use safe eject ", window_x + 1, window_y+1, 13, 1);
+                draw_text("to conitinue...", window_x + 1, window_y+2, 13, 1);
 
                 sleep_ms(500);
 
