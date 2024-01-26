@@ -52,7 +52,7 @@ void led_blinking_task(void);
 void cdc_task(void);
 
 /*------------- MAIN -------------*/
-void init_pico_usb_drive() {
+inline void init_pico_usb_drive() {
     set_tud_msc_ejected(false);
     board_init();
     // init device stack on configured roothub port
@@ -62,7 +62,7 @@ void init_pico_usb_drive() {
     }
 }
 
-void pico_usb_drive_heartbeat() {
+inline void pico_usb_drive_heartbeat() {
     tud_task(); // tinyusb device task
     led_blinking_task();
     cdc_task();

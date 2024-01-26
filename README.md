@@ -12,5 +12,5 @@ Additionally, you can:
 # Compiling
 To compile it yourself:
 
-1. Copy the file boot2\exit_from_boot2.S from the repository to your Pico SDK at pico-sdk\src\rp2_common\boot_stage2\asminclude\boot2_helpers\exit_from_boot2.S.CopyCopyCopyCopy
+1. Copy the file ``boot2\exit_from_boot2.S`` from the repository to your Pico SDK at ``pico-sdk\src\rp2_common\boot_stage2\asminclude\boot2_helpers\exit_from_boot2.S``
 2. Build using the "MinSizeRel" build type.
