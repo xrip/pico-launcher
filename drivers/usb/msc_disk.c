@@ -112,7 +112,7 @@ int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void* buff
     return disk_read(0, buffer, lba, 1) == RES_OK ? bufsize : -1;
 }
 
-bool sd_card_writable() {
+inline static bool sd_card_writable() {
     DSTATUS ds = disk_status(0);
     DSTATUS rs = ds & 0x04/*STA_PROTECT*/;
     // char tmp[80]; sprintf(tmp, "tud_msc_is_writable_cb(1) ds: %d rs: %d r: %d", ds, rs, !rs); logMsg(tmp);

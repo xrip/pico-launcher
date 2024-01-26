@@ -302,6 +302,11 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
                 while(!tud_msc_ejected()) {
                     pico_usb_drive_heartbeat();
                 }
+                int post_cicles = 1000;
+                while(--post_cicles) {
+                    sleep_ms(1);
+                    pico_usb_drive_heartbeat();
+                }
             }
 
             if (nespad_state & DPAD_DOWN || input == 0x50) {
