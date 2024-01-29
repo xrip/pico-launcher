@@ -16,9 +16,6 @@ extern "C" {
 #endif
 #ifdef VGA
 #include "vga.h"
-bool cursor_blink_state = false;
-uint8_t CURSOR_X, CURSOR_Y = 0;
-uint8_t manager_started = false;
 #endif
 
 #include "ps2.h"
@@ -204,6 +201,25 @@ int compareFileItems(const void* a, const void* b) {
     return strcmp(itemA->filename, itemB->filename);
 }
 
+static inline bool isExecutable(const char pathname[256], const char *extensions) {
+    const char *extension = strrchr(pathname, '.');
+    if (extension == nullptr) {
+        return false;
+    }
+    extension++; // Move past the '.' character
+
+    const char *token = strtok((char *)extensions, "|"); // Tokenize the extensions string using '|'
+
+    while (token != nullptr) {
+        if (strcmp(extension, token) == 0) {
+            return true;
+        }
+        token = strtok(NULL, "|");
+    }
+
+    return false;
+}
+
 void __not_in_flash_func(filebrowser)(const char pathname[256], const char* executables) {
     bool debounce = true;
     char basepath[256];
@@ -225,7 +241,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
         memset(fileItems, 0, sizeof(file_item_t) * max_files);
         int total_files = 0;
 
-        snprintf(tmp, TEXTMODE_COLS, "SDCARD:\\%s", basepath);
+        snprintf(tmp, TEXTMODE_COLS, "SD:\\%s", basepath);
         draw_window(tmp, 0, 0, TEXTMODE_COLS, TEXTMODE_ROWS - 1);
         memset(tmp, ' ', TEXTMODE_COLS);
 
@@ -268,11 +284,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
             // Set the file item properties
             fileItems[total_files].is_directory = fileInfo.fattrib & AM_DIR;
             fileItems[total_files].size = fileInfo.fsize;
-            // Extract the extension from the file name
-            const char* extension = strrchr(fileInfo.fname, '.');
-            if (extension != nullptr && strncmp(executables, extension + 1, 3) == 0) {
-                fileItems[total_files].is_executable = true;
-            }
+            fileItems[total_files].is_executable = isExecutable(fileInfo.fname, executables);
             strncpy(fileItems[total_files].filename, fileInfo.fname, 78);
             total_files++;
         }
