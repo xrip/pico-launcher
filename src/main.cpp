@@ -49,7 +49,7 @@ struct UF2_Block_t {
 } UF2_Block_t;
 
 
-uint8_t SCREEN[DISP_HEIGHT][DISP_WIDTH];
+uint16_t SCREEN[TEXTMODE_ROWS][TEXTMODE_COLS];
 
 
 uint32_t input;
@@ -67,8 +67,8 @@ void __time_critical_func(render_core)() {
     multicore_lockout_victim_init();
     graphics_init();
 
-    auto* buffer = &SCREEN[0][0];
-    graphics_set_buffer(buffer, DISP_WIDTH, DISP_HEIGHT);
+    auto buffer = (uint8_t *)SCREEN;
+    graphics_set_buffer(buffer, TEXTMODE_COLS, TEXTMODE_ROWS);
     graphics_set_textbuffer(buffer);
     graphics_set_bgcolor(0x000000);
     graphics_set_offset(0, 0);
@@ -187,11 +187,22 @@ typedef struct __attribute__((__packed__)) {
     bool is_executable;
     size_t size;
     char filename[79];
-    char short_filename[12 + 1];
 } file_item_t;
 
-constexpr int max_files = 1000;
+constexpr int max_files = 2500;
 static file_item_t fileItems[max_files];
+
+int compareFileItems(const void* a, const void* b) {
+    auto* itemA = (file_item_t *)a;
+    auto* itemB = (file_item_t *)b;
+    // Directories come first
+    if (itemA->is_directory && !itemB->is_directory)
+        return -1;
+    if (!itemA->is_directory && itemB->is_directory)
+        return 1;
+    // Sort files alphabetically
+    return strcmp(itemA->filename, itemB->filename);
+}
 
 void __not_in_flash_func(filebrowser)(const char pathname[256], const char* executables) {
     bool debounce = true;
@@ -203,7 +214,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
     DIR dir;
     FILINFO fileInfo;
 
-    if (FR_OK != f_mount(&fs, "", 1)) {
+    if (FR_OK != f_mount(&fs, "SD", 1)) {
         draw_text("SD Card not inserted or SD Card error!", 0, 0, 12, 0);
         // reboot: wait for sd-card
         watchdog_enable(100, true);
@@ -266,7 +277,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
             total_files++;
         }
         f_closedir(&dir);
-
+        qsort(fileItems, total_files, sizeof(file_item_t), compareFileItems);
 
         if (total_files > max_files) {
             draw_text(" Too many files!! ", TEXTMODE_COLS - 17, 0, 12, 3);
