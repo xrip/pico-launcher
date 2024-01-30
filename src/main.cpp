@@ -20,7 +20,6 @@ extern "C" {
 
 #include "ps2.h"
 #include "usb.h"
-#include "hardware/watchdog.h"
 }
 
 #include "ff.h"
@@ -233,7 +232,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
     if (FR_OK != f_mount(&fs, "SD", 1)) {
         draw_text("SD Card not inserted or SD Card error!", 0, 0, 12, 0);
         // reboot: wait for sd-card
-        watchdog_enable(100, true);
+        // watchdog_enable(100, true);
         while (true);
     }
 
