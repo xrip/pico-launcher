@@ -4,7 +4,9 @@
 #include "stdbool.h"
 
 #define PIO_VGA (pio0)
-#define beginVGA_PIN (6)
+#ifndef VGA_BASE_PIN
+#define VGA_BASE_PIN (6)
+#endif
 #define VGA_DMA_IRQ (DMA_IRQ_0)
 
 #define TEXTMODE_COLS 80

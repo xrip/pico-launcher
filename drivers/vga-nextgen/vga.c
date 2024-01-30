@@ -648,21 +648,21 @@ void graphics_init() {
     uint sm = _SM_VGA;
 
     for (int i = 0; i < 8; i++) {
-        gpio_init(beginVGA_PIN + i);
-        gpio_set_dir(beginVGA_PIN + i, GPIO_OUT);
-        pio_gpio_init(PIO_VGA, beginVGA_PIN + i);
+        gpio_init(VGA_BASE_PIN + i);
+        gpio_set_dir(VGA_BASE_PIN + i, GPIO_OUT);
+        pio_gpio_init(PIO_VGA, VGA_BASE_PIN + i);
     }; //резервируем под выход PIO
 
     //pio_sm_config c = pio_vga_program_get_default_config(offset);
 
-    pio_sm_set_consecutive_pindirs(PIO_VGA, sm, beginVGA_PIN, 8, true); //конфигурация пинов на выход
+    pio_sm_set_consecutive_pindirs(PIO_VGA, sm, VGA_BASE_PIN, 8, true); //конфигурация пинов на выход
 
     pio_sm_config c = pio_get_default_sm_config();
     sm_config_set_wrap(&c, offset + 0, offset + (pio_program_VGA.length - 1));
 
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX); //увеличение буфера TX за счёт RX до 8-ми
     sm_config_set_out_shift(&c, true, true, 32);
-    sm_config_set_out_pins(&c, beginVGA_PIN, 8);
+    sm_config_set_out_pins(&c, VGA_BASE_PIN, 8);
     pio_sm_init(PIO_VGA, sm, offset, &c);
 
     pio_sm_set_enabled(PIO_VGA, sm, true);

@@ -18,12 +18,14 @@ extern "C" {
 
 #define RGB888(r, g, b) ((r<<16) | (g << 8 ) | b )
 
-#define beginVideo_PIN (6)
+#ifndef HDMI_BASE_PIN
+#define HDMI_BASE_PIN (6)
+#endif
 
 #define HDMI_PIN_invert_diffpairs (1)
 #define HDMI_PIN_RGB_notBGR (1)
-#define beginHDMI_PIN_data (beginVideo_PIN+2)
-#define beginHDMI_PIN_clk (beginVideo_PIN)
+#define beginHDMI_PIN_data (HDMI_BASE_PIN+2)
+#define beginHDMI_PIN_clk (HDMI_BASE_PIN)
 
 
 // TODO: Сделать настраиваемо

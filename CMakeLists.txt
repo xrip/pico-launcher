@@ -96,11 +96,29 @@ endif ()
 target_compile_definitions(${PROJECT_NAME} PRIVATE
         PICO_FLASH_SIZE_BYTES=16777216
 
+        # VGA 8 pins starts from pin:
+        VGA_BASE_PIN=6
+
+        # HDMI 8 pins starts from pin:
+        HDMI_BASE_PIN=6
+
+        # TFT
+        TFT_CS_PIN=6
+        TFT_RST_PIN=8
+        TFT_LED_PIN=9
+        TFT_DC_PIN=10
+        TFT_DATA_PIN=12
+        TFT_CLK_PIN=13
+
         # SDCARD
-        SDCARD_PIN_SPI0_CS=5
         SDCARD_PIN_SPI0_SCK=2
         SDCARD_PIN_SPI0_MOSI=3
         SDCARD_PIN_SPI0_MISO=4
+        SDCARD_PIN_SPI0_CS=5
+
+        # PS2 keyboard
+        KBD_CLOCK_PIN=0
+        KBD_DATA_PIN=1
 
         # NES Gamepad
         NES_GPIO_CLK=14
