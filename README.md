@@ -6,7 +6,7 @@ Bootloader firmware flasher / launcher for MURMULATOR devboard
 2) Reboot PICO by holding down SELECT on the Gamepad or F11 on the keyboard and select default firmware.
 
 Additionally, you can:
-- Hold F12 or START button while booting to enter SD card firmware update mode.
+- Hold F12 or START button while booting to enter firmware update mode.
 - Use F10 or the A button in the launcher to enter SD card-reader mode.
 
 # Compiling
