@@ -49,10 +49,10 @@ struct UF2_Block_t {
 uint16_t SCREEN[TEXTMODE_ROWS][TEXTMODE_COLS];
 
 
-uint32_t input;
+static uint32_t input;
 
 extern "C" {
-bool handleScancode(const uint32_t ps2scancode) {
+bool __time_critical_func(handleScancode)(const uint32_t ps2scancode) {
     if (ps2scancode)
         input = ps2scancode;
 
@@ -64,7 +64,7 @@ void __time_critical_func(render_core)() {
     multicore_lockout_victim_init();
     graphics_init();
 
-    auto buffer = (uint8_t *)SCREEN;
+    const auto buffer = (uint8_t *)SCREEN;
     graphics_set_buffer(buffer, TEXTMODE_COLS, TEXTMODE_ROWS);
     graphics_set_textbuffer(buffer);
     graphics_set_bgcolor(0x000000);
@@ -190,8 +190,8 @@ constexpr int max_files = 2500;
 static file_item_t fileItems[max_files];
 
 int compareFileItems(const void* a, const void* b) {
-    auto* itemA = (file_item_t *)a;
-    auto* itemB = (file_item_t *)b;
+    const auto* itemA = (file_item_t *)a;
+    const auto* itemB = (file_item_t *)b;
     // Directories come first
     if (itemA->is_directory && !itemB->is_directory)
         return -1;
@@ -201,14 +201,14 @@ int compareFileItems(const void* a, const void* b) {
     return strcmp(itemA->filename, itemB->filename);
 }
 
-static inline bool isExecutable(const char pathname[256], const char *extensions) {
-    const char *extension = strrchr(pathname, '.');
+static inline bool isExecutable(const char pathname[256], const char* extensions) {
+    const char* extension = strrchr(pathname, '.');
     if (extension == nullptr) {
         return false;
     }
     extension++; // Move past the '.' character
 
-    const char *token = strtok((char *)extensions, "|"); // Tokenize the extensions string using '|'
+    const char* token = strtok((char *)extensions, "|"); // Tokenize the extensions string using '|'
 
     while (token != nullptr) {
         if (strcmp(extension, token) == 0) {
@@ -234,7 +234,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
         draw_text("SD Card not inserted or SD Card error!", 0, 0, 12, 0);
         // reboot: wait for sd-card
         watchdog_enable(100, true);
-        while(true);
+        while (true);
     }
 
     while (true) {
@@ -260,14 +260,14 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
         off += 6;
         draw_text(" Navigation    ", off, 29, 0, 3);
         off += 16;
-        draw_text("A/Z", off, 29, 7, 0);
-        off += 3;
+        draw_text("A/F10", off, 29, 7, 0);
+        off += 5;
         draw_text(" USB DRV ", off, 29, 0, 3);
 #endif
 
         if (FR_OK != f_opendir(&dir, basepath)) {
             draw_text("Failed to open directory", 1, 1, 4, 0);
-            while(true);
+            while (true);
         }
 
         if (strlen(basepath) > 0) {
@@ -315,18 +315,18 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
                 constexpr int window_x = (TEXTMODE_COLS - 40) / 2;
                 constexpr int window_y = (TEXTMODE_ROWS - 4) / 2;
                 draw_window("SD Cardreader mode ", window_x, window_y, 40, 4);
-                draw_text("Mounting SD Card. Use safe eject ", window_x + 1, window_y+1, 13, 1);
-                draw_text("to conitinue...", window_x + 1, window_y+2, 13, 1);
+                draw_text("Mounting SD Card. Use safe eject ", window_x + 1, window_y + 1, 13, 1);
+                draw_text("to conitinue...", window_x + 1, window_y + 2, 13, 1);
 
                 sleep_ms(500);
 
                 init_pico_usb_drive();
 
-                while(!tud_msc_ejected()) {
+                while (!tud_msc_ejected()) {
                     pico_usb_drive_heartbeat();
                 }
                 int post_cicles = 1000;
-                while(--post_cicles) {
+                while (--post_cicles) {
                     sleep_ms(1);
                     pico_usb_drive_heartbeat();
                 }
