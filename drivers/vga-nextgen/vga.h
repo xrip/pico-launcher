@@ -11,6 +11,3 @@
 #define TEXTMODE_ROWS 30
 
 #define RGB888(r, g, b) ((r<<16) | (g << 8 ) | b )
-
-extern bool cursor_blink_state;
-extern uint8_t CURSOR_Y, CURSOR_X;

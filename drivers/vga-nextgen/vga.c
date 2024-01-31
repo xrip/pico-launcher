@@ -487,51 +487,6 @@ void graphics_set_flashmode(bool flash_line, bool flash_frame) {
 void graphics_set_textbuffer(uint8_t* buffer) {
     text_buffer = buffer;
 };
-static int current_line = 25;
-static int start_debug_line = 25;
-
-
-char* get_free_vram_ptr() {
-    return text_buffer + text_buffer_width * 2 * text_buffer_height;
-}
-
-void set_start_debug_line(int _start_debug_line) {
-    start_debug_line = _start_debug_line;
-}
-
-#if BOOT_DEBUG
-void logFile(char* msg);
-#endif
-
-extern volatile bool manager_started;
-
-void logMsg(char* msg) {
-    return;
-#if BOOT_DEBUG
-    { char tmp[85]; sprintf(tmp, "%s\n", msg); logFile(tmp); }
-#else
-    printf("%s\n", msg);
-#endif
-    if (graphics_mode != TEXTMODE_80x30 || manager_started) {
-        // log in text mode only
-        return;
-    }
-    if (current_line >= 30 - 1) {
-        current_line = 29;
-        size_t sz = text_buffer_width * 2;
-        for (int i = start_debug_line; i < current_line; ++i) {
-            uint8_t* t_buf1 = text_buffer + sz * i;
-            uint8_t* t_buf2 = text_buffer + sz * (i + 1);
-            memcpy(t_buf1, t_buf2, sz);
-        }
-        uint8_t* t_buf = text_buffer + sz * current_line;
-        for (int i = 0; i < sz; ++i) {
-            *(t_buf++) = ' ';
-            *(t_buf++) = 1 << 4;
-        }
-    }
-    draw_text(msg, 0, current_line++, 7, 1);
-}
 
 void graphics_set_bgcolor(uint32_t color888) {
     uint8_t conv0[] = { 0b00, 0b00, 0b01, 0b10, 0b10, 0b10, 0b11, 0b11 };
@@ -664,7 +619,7 @@ void graphics_init() {
     );
     //dma_channel_set_read_addr(dma_chan, &DMA_BUF_ADDR[0], false);
 
-    graphics_set_mode(TGA_320x200x16);
+    graphics_set_mode(VGA_320x240x256);
 
     irq_set_exclusive_handler(VGA_DMA_IRQ, dma_handler_VGA);
 
@@ -672,48 +627,4 @@ void graphics_init() {
 
     irq_set_enabled(VGA_DMA_IRQ, true);
     dma_start_channel_mask((1u << dma_chan));
-};
-
-/*
-#include "emulator.h"
-static FATFS fs;
-static FIL file;
-static int video_ram_level = 0;
-
-bool save_video_ram() {
-    gpio_put(PICO_DEFAULT_LED_PIN, true);
-    char path[16];
-    sprintf(path, "\\XT\\video%d.ram", video_ram_level);
-    FRESULT result = f_open(&file, path, FA_WRITE | FA_CREATE_ALWAYS);
-    if (result != FR_OK) {
-        return false;
-    }
-    UINT bw;
-    result = f_write(&file, VIDEORAM, sizeof(VIDEORAM), &bw);
-    if (result != FR_OK) {
-        return false;
-    }
-    f_close(&file);
-    video_ram_level++;
-    gpio_put(PICO_DEFAULT_LED_PIN, false);
-    return true;
 }
-bool restore_video_ram() {
-    gpio_put(PICO_DEFAULT_LED_PIN, true);
-    video_ram_level--;
-    char path[16];
-    sprintf(path, "\\XT\\video%d.ram", video_ram_level);
-    FRESULT result = f_open(&file, path, FA_READ);
-    if (result == FR_OK) {
-      UINT bw;
-      result = f_read(&file, VIDEORAM, sizeof(VIDEORAM), &bw);
-      if (result != FR_OK) {
-        return false;
-      }
-    }
-    f_close(&file);
-    f_unlink(path);
-    gpio_put(PICO_DEFAULT_LED_PIN, false);
-    return true;
-}
-*/
