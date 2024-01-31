@@ -11,7 +11,7 @@
 #include "hardware/pio.h"
 #include "hardware/gpio.h"
 
-#include "st7789.h"
+#include "graphics.h"
 
 #include <string.h>
 #include <pico/multicore.h>
@@ -19,8 +19,15 @@
 #include "st7789.pio.h"
 #include "fnt6x8.h"
 
+#ifndef SCREEN_WIDTH
 #define SCREEN_WIDTH 320
+#endif
+
+#ifndef SCREEN_HEIGHT
 #define SCREEN_HEIGHT 240
+#endif
+
+// 126MHz SPI
 #define SERIAL_CLK_DIV 3.0f
 #define MADCTL_BGR_PIXEL_ORDER (1<<3)
 #define MADCTL_ROW_COLUMN_EXCHANGE (1<<5)
@@ -33,7 +40,7 @@ static uint sm = 0;
 static PIO pio = pio0;
 uint16_t __scratch_y("tft_palette") palette[256];
 
-static uint8_t* text_buffer = NULL;
+uint8_t* text_buffer = NULL;
 static uint8_t* graphics_buffer = NULL;
 
 static uint graphics_buffer_width = 0;
@@ -169,44 +176,6 @@ void clrScr(const uint8_t color) {
         st7789_lcd_put16(pio, sm, 0x0000);
     }
     st7789_lcd_wait_idle(pio, sm);
-}
-
-void draw_text(const char string[TEXTMODE_COLS+1], uint32_t x, uint32_t y, uint8_t color, uint8_t bgcolor) {
-    uint8_t* t_buf = text_buffer + TEXTMODE_COLS * 2 * y + 2 * x;
-    for (int xi = TEXTMODE_COLS * 2; xi--;) {
-        if (!*string) break;
-        *t_buf++ = *string++;
-        *t_buf++ = bgcolor << 4 | color & 0xF;
-    }
-}
-
-void draw_window(const char title[TEXTMODE_COLS], uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-    char line[width+1];
-    memset(line, 0, sizeof line);
-    width--;
-    height--;
-    // Рисуем рамки
-
-    memset(line, 0xCD, width); // ═══
-
-
-    line[0] = 0xC9; // ╔
-    line[width] = 0xBB; // ╗
-    draw_text(line, x, y, 11, 1);
-
-    line[0] = 0xC8; // ╚
-    line[width] = 0xBC; //  ╝
-    draw_text(line, x, height + y, 11, 1);
-
-    memset(line, ' ', width);
-    line[0] = line[width] = 0xBA;
-
-    for (int i = 1; i < height; i++) {
-        draw_text(line, x, y+i, 11, 1);
-    }
-
-    snprintf(line, width - 1, " %s ", title);
-    draw_text(line, x +(width - strlen(line)) / 2, y, 14, 3);
 }
 
 void __inline __scratch_y("refresh_lcd") refresh_lcd() {
