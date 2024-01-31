@@ -7,17 +7,9 @@
 #include <pico/multicore.h>
 #include <pico/stdlib.h>
 
-extern "C" {
-#ifdef TFT
-#include "st7789.h"
-#endif
-#ifdef HDMI
-#include "hdmi.h"
-#endif
-#ifdef VGA
-#include "vga.h"
-#endif
+#include "graphics.h"
 
+extern "C" {
 #include "ps2.h"
 #include "usb.h"
 }

@@ -1,4 +1,4 @@
-#include "vga.h"
+#include "graphics.h"
 #include "hardware/clocks.h"
 #include "stdbool.h"
 #include "hardware/structs/pll.h"
@@ -58,9 +58,6 @@ static uint16_t palette[2][256];
 
 static uint32_t bg_color[2];
 static uint16_t palette16_mask = 0;
-
-static uint8_t* text_buffer;
-static uint8_t* text_buf_color;
 
 static uint text_buffer_width = 0;
 static uint text_buffer_height = 0;
@@ -337,7 +334,7 @@ void dma_handler_VGA() {
     dma_channel_set_read_addr(dma_chan_ctrl, output_buffer, false);
 }
 
-enum graphics_mode_t graphics_set_mode(enum graphics_mode_t mode) {
+void graphics_set_mode(enum graphics_mode_t mode) {
     switch (mode) {
         case TEXTMODE_53x30:
             text_buffer_width = 40;
@@ -350,14 +347,14 @@ enum graphics_mode_t graphics_set_mode(enum graphics_mode_t mode) {
             text_buffer_height = 30;
     }
     memset(graphics_buffer, 0, graphics_buffer_height * graphics_buffer_width);
-    if (_SM_VGA < 0) return graphics_mode; // если  VGA не инициализирована -
+    if (_SM_VGA < 0) return; // если  VGA не инициализирована -
 
     enum graphics_mode_t res = graphics_mode;
     graphics_mode = mode;
 
     // Если мы уже проиницилизированы - выходим
     if ((txt_palette_fast) && (lines_pattern_data)) {
-        return res;
+        return;
     };
     uint8_t TMPL_VHS8 = 0;
     uint8_t TMPL_VS8 = 0;
@@ -418,7 +415,7 @@ enum graphics_mode_t graphics_set_mode(enum graphics_mode_t mode) {
             fdiv = clock_get_hz(clk_sys) / (25175000.0); //частота пиксельклока
             break;
         default:
-            return res;
+            return;
     }
 
     //корректировка  палитры по маске бит синхры
@@ -466,7 +463,7 @@ enum graphics_mode_t graphics_set_mode(enum graphics_mode_t mode) {
         base_ptr = (uint8_t *)lines_pattern[3];
         memcpy(base_ptr, lines_pattern[0], line_size);
     }
-    return res;
+    return ;
 };
 
 void graphics_set_buffer(uint8_t* buffer, uint16_t width, uint16_t height) {
@@ -499,43 +496,6 @@ void clrScr(const uint8_t color) {
     while (size--) *t_buf++ = color << 4 << 8 | ' ';
 }
 
-void draw_text(const char string[TEXTMODE_COLS], uint32_t x, uint32_t y, uint8_t color, uint8_t bgcolor) {
-    uint8_t* t_buf = text_buffer + TEXTMODE_COLS * 2 * y + 2 * x;
-    for (int xi = TEXTMODE_COLS * 2; xi--;) {
-        if (!*string) break;
-        *t_buf++ = *string++;
-        *t_buf++ = bgcolor << 4 | color & 0xF;
-    }
-}
-
-void draw_window(const char title[TEXTMODE_COLS], uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-    char line[width + 1];
-    memset(line, 0, sizeof line);
-    width--;
-    height--;
-    // Рисуем рамки
-
-    memset(line, 0xCD, width); // ═══
-
-
-    line[0] = 0xC9; // ╔
-    line[width] = 0xBB; // ╗
-    draw_text(line, x, y, 11, 1);
-
-    line[0] = 0xC8; // ╚
-    line[width] = 0xBC; //  ╝
-    draw_text(line, x, height + y, 11, 1);
-
-    memset(line, ' ', width);
-    line[0] = line[width] = 0xBA;
-
-    for (int i = 1; i < height; i++) {
-        draw_text(line, x, y + i, 11, 1);
-    }
-
-    snprintf(line, width - 1, " %s ", title);
-    draw_text(line, x + (width - strlen(line)) / 2, y, 0, 3);
-}
 
 char* get_free_vram_ptr() {
     return text_buffer + text_buffer_width * 2 * text_buffer_height;

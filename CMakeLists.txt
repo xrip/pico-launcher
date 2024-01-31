@@ -36,6 +36,7 @@ add_subdirectory(drivers/nespad)
 add_subdirectory(drivers/vga-nextgen)
 add_subdirectory(drivers/st7789)
 add_subdirectory(drivers/hdmi)
+add_subdirectory(drivers/graphics)
 
 # INCLUDE FILES THAT SHOULD BE COMPILED:
 file(GLOB_RECURSE SRC "src/*.cpp" "src/*.c" "drivers/usb/*.c")
@@ -60,6 +61,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         sdcard
         fatfs
         nespad
+
+        graphics
 
         pico_runtime
         pico_stdlib

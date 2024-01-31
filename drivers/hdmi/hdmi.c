@@ -1,4 +1,4 @@
-#include "hdmi.h"
+#include "graphics.h"
 #include <stdio.h>
 #include <string.h>
 #include "malloc.h"
@@ -34,8 +34,7 @@ static int graphics_buffer_height = 0;
 static int graphics_buffer_shift_x = 0;
 static int graphics_buffer_shift_y = 0;
 
-//текстовый буфер
-static uint8_t* __scratch_y("hdmi_ptr_2") text_buffer = NULL;
+
 
 
 //DMA каналы
@@ -53,8 +52,7 @@ static uint32_t* __scratch_y("hdmi_ptr_4") DMA_BUF_ADDR[2];
 
 //ДМА палитра для конвертации
 //в хвосте этой памяти выделяется dma_data
-static alignas(4096)
-uint32_t conv_color[1224];
+static alignas(4) uint32_t conv_color[1224];
 
 
 //индекс, проверяющий зависание
@@ -544,11 +542,10 @@ static inline bool hdmi_init() {
     return true;
 };
 //выбор видеорежима
-enum graphics_mode_t graphics_set_mode(enum graphics_mode_t mode) {
+void graphics_set_mode(enum graphics_mode_t mode) {
     graphics_mode = mode;
     clrScr(0);
-    return graphics_mode;
-};
+}
 
 void graphics_set_palette(uint8_t i, uint32_t color888) {
     palette[i] = color888 & 0x00ffffff;
@@ -602,44 +599,6 @@ void graphics_init() {
     graphics_set_palette(215, RGB888(0xFF, 0xFF, 0xFF)); //white
 
     hdmi_init();
-}
-
-void draw_text(const char string[TEXTMODE_COLS], uint32_t x, uint32_t y, uint8_t color, uint8_t bgcolor) {
-    uint8_t* t_buf = text_buffer + TEXTMODE_COLS * 2 * y + 2 * x;
-    for (int xi = TEXTMODE_COLS * 2; xi--;) {
-        if (!*string) break;
-        *t_buf++ = *string++;
-        *t_buf++ = bgcolor << 4 | color & 0xF;
-    }
-}
-
-void draw_window(const char title[TEXTMODE_COLS], uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-    char line[width + 1];
-    memset(line, 0, sizeof line);
-    width--;
-    height--;
-    // Рисуем рамки
-
-    memset(line, 0xCD, width); // ═══
-
-
-    line[0] = 0xC9; // ╔
-    line[width] = 0xBB; // ╗
-    draw_text(line, x, y, 11, 1);
-
-    line[0] = 0xC8; // ╚
-    line[width] = 0xBC; //  ╝
-    draw_text(line, x, height + y, 11, 1);
-
-    memset(line, ' ', width);
-    line[0] = line[width] = 0xBA;
-
-    for (int i = 1; i < height; i++) {
-        draw_text(line, x, y + i, 11, 1);
-    }
-
-    snprintf(line, width - 1, " %s ", title);
-    draw_text(line, x + (width - strlen(line)) / 2, y, 0, 3);
 }
 
 void clrScr(const uint8_t color) {
