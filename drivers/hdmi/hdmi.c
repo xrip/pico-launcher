@@ -603,13 +603,6 @@ void graphics_init() {
     hdmi_init();
 }
 
-void clrScr(const uint8_t color) {
-    uint16_t* t_buf = (uint16_t *)text_buffer;
-    int size = TEXTMODE_COLS * TEXTMODE_ROWS;
-
-    while (size--) *t_buf++ = color << 4 << 8 | ' ';
-}
-
 void graphics_set_bgcolor(uint32_t color888) //определяем зарезервированный цвет в палитре
 {
     graphics_set_palette(255, color888);
