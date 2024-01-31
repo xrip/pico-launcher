@@ -33,7 +33,7 @@ static const uint8_t textmode_palette[16] = {
 };
 
 
-inline static void graphics_set_flashmode(bool flash_line, bool flash_frame) {
+static void graphics_set_flashmode(bool flash_line, bool flash_frame) {
     // dummy
 }
 

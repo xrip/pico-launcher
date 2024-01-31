@@ -27,15 +27,15 @@ static uint32_t palette[256];
 
 #define SCREEN_WIDTH (320)
 #define SCREEN_HEIGHT (240)
-uint8_t* text_buffer = NULL;
 //графический буфер
-static uint8_t* graphics_buffer = NULL;
+static uint8_t* __scratch_y("hdmi_ptr_1") graphics_buffer = NULL;
 static int graphics_buffer_width = 0;
 static int graphics_buffer_height = 0;
 static int graphics_buffer_shift_x = 0;
 static int graphics_buffer_shift_y = 0;
 
-
+//текстовый буфер
+uint8_t* text_buffer = NULL;
 
 
 //DMA каналы
@@ -53,7 +53,8 @@ static uint32_t* __scratch_y("hdmi_ptr_4") DMA_BUF_ADDR[2];
 
 //ДМА палитра для конвертации
 //в хвосте этой памяти выделяется dma_data
-static alignas(4) uint32_t conv_color[1224];
+static alignas(4096)
+uint32_t conv_color[1224];
 
 
 //индекс, проверяющий зависание
@@ -546,7 +547,7 @@ static inline bool hdmi_init() {
 void graphics_set_mode(enum graphics_mode_t mode) {
     graphics_mode = mode;
     clrScr(0);
-}
+};
 
 void graphics_set_palette(uint8_t i, uint32_t color888) {
     palette[i] = color888 & 0x00ffffff;
