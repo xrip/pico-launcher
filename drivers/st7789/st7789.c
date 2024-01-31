@@ -48,7 +48,7 @@ static uint graphics_buffer_height = 0;
 static int graphics_buffer_shift_x = 0;
 static int graphics_buffer_shift_y = 0;
 
-enum graphics_mode_t graphics_mode = VGA_320x200x256;
+enum graphics_mode_t graphics_mode = GRAPHICSMODE_DEFAULT;
 
 static const uint8_t init_seq[] = {
     1, 20, 0x01, // Software reset
@@ -180,7 +180,7 @@ void clrScr(const uint8_t color) {
 
 void __inline __scratch_y("refresh_lcd") refresh_lcd() {
     switch (graphics_mode) {
-        case TEXTMODE_80x30:
+        case TEXTMODE_DEFAULT:
             lcd_set_window(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
             start_pixels();
             for (int y = 0; y < SCREEN_HEIGHT; y++) {
@@ -202,7 +202,7 @@ void __inline __scratch_y("refresh_lcd") refresh_lcd() {
                 st7789_lcd_put16(pio, sm, 0x0000);
             }
             break;
-        case VGA_320x200x256: {
+        case GRAPHICSMODE_DEFAULT: {
             const uint8_t* bitmap = graphics_buffer;
             lcd_set_window(graphics_buffer_shift_x, graphics_buffer_shift_y, graphics_buffer_width,
                        graphics_buffer_height);

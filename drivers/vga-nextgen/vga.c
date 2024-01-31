@@ -628,3 +628,11 @@ void graphics_init() {
     irq_set_enabled(VGA_DMA_IRQ, true);
     dma_start_channel_mask((1u << dma_chan));
 }
+
+
+void clrScr(const uint8_t color) {
+    uint16_t* t_buf = (uint16_t *)text_buffer;
+    int size = TEXTMODE_COLS * TEXTMODE_ROWS;
+
+    while (size--) *t_buf++ = color << 4 | ' ';
+}
