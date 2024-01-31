@@ -490,13 +490,6 @@ void graphics_set_textbuffer(uint8_t* buffer) {
 static int current_line = 25;
 static int start_debug_line = 25;
 
-void clrScr(const uint8_t color) {
-    uint16_t* t_buf = (uint16_t *)text_buffer;
-    int size = TEXTMODE_COLS * TEXTMODE_ROWS;
-
-    while (size--) *t_buf++ = color << 4 << 8 | ' ';
-}
-
 
 char* get_free_vram_ptr() {
     return text_buffer + text_buffer_width * 2 * text_buffer_height;
