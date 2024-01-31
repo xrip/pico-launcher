@@ -11,7 +11,7 @@ void draw_text(const char string[TEXTMODE_COLS+1], uint32_t x, uint32_t y, uint8
     }
 }
 
-void draw_window(const char title[TEXTMODE_COLS], uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+void draw_window(const char title[TEXTMODE_COLS+1], uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
     char line[width+1];
     memset(line, 0, sizeof line);
     width--;

@@ -60,7 +60,7 @@ void __time_critical_func(render_core)() {
     graphics_set_textbuffer(buffer);
     graphics_set_bgcolor(0x000000);
     graphics_set_offset(0, 0);
-    graphics_set_mode(TEXTMODE_80x30);
+    graphics_set_mode(TEXTMODE_DEFAULT);
     clrScr(1);
 
     sem_acquire_blocking(&vga_start_semaphore);

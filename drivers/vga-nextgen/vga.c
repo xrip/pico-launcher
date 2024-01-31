@@ -72,7 +72,7 @@ static uint16_t* txt_palette_fast = NULL;
 enum graphics_mode_t graphics_mode;
 
 
-void dma_handler_VGA() {
+void __time_critical_func() dma_handler_VGA() {
     dma_hw->ints0 = 1u << dma_chan_ctrl;
     static uint32_t frame_number = 0;
     static uint32_t screen_line = 0;
@@ -120,8 +120,8 @@ void dma_handler_VGA() {
         case CGA_640x200x2:
         case TGA_320x200x16:
         case EGA_320x200x16x4:
-        case VGA_320x200x256:
         case VGA_320x200x256x4:
+        case GRAPHICSMODE_DEFAULT:
             line_number = screen_line / 2;
             if (screen_line % 2) return;
             y = screen_line / 2 - graphics_buffer_shift_y;
@@ -129,7 +129,7 @@ void dma_handler_VGA() {
 
         case TEXTMODE_160x100:
         case TEXTMODE_53x30:
-        case TEXTMODE_80x30: {
+        case TEXTMODE_DEFAULT: {
             uint16_t* output_buffer_16bit = (uint16_t *)*output_buffer;
             output_buffer_16bit += shift_picture / 2;
             const uint font_weight = 8;
@@ -311,7 +311,7 @@ void dma_handler_VGA() {
             }
             break;
         }
-        case VGA_320x200x256:
+        case GRAPHICSMODE_DEFAULT:
             input_buffer_8bit = input_buffer + y * width;
             for (int i = width; i--;) {
                 //*output_buffer_16bit++=current_palette[*input_buffer_8bit++];
@@ -341,7 +341,7 @@ void graphics_set_mode(enum graphics_mode_t mode) {
             text_buffer_width = 40;
             text_buffer_height = 30;
             break;
-        case TEXTMODE_80x30:
+        case TEXTMODE_DEFAULT:
         case TEXTMODE_160x100:
         default:
             text_buffer_width = 80;
@@ -370,7 +370,7 @@ void graphics_set_mode(enum graphics_mode_t mode) {
     switch (graphics_mode) {
         case TEXTMODE_160x100:
         case TEXTMODE_53x30:
-        case TEXTMODE_80x30:
+        case TEXTMODE_DEFAULT:
             //текстовая палитра
             for (int i = 0; i < 16; i++) {
                 txt_palette[i] = (txt_palette[i] & 0x3f) | (palette16_mask >> 8);
@@ -391,7 +391,7 @@ void graphics_set_mode(enum graphics_mode_t mode) {
         case CGA_640x200x2:
         case CGA_320x200x4:
         case CGA_160x200x16:
-        case VGA_320x200x256:
+        case GRAPHICSMODE_DEFAULT:
         case VGA_320x200x256x4:
         case EGA_320x200x16x4:
         case TGA_320x200x16:
