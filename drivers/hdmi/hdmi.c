@@ -19,7 +19,7 @@ static int SM_video = -1;
 static int SM_conv = -1;
 
 //активный видеорежим
-static enum graphics_mode_t graphics_mode = VGA_320x200x256;
+static enum graphics_mode_t graphics_mode = GRAPHICSMODE_DEFAULT;
 
 //буфер  палитры 256 цветов в формате R8G8B8
 static uint32_t palette[256];
@@ -187,7 +187,7 @@ static void __scratch_y("hdmi_driver") dma_handler_HDMI() {
         uint8_t* output_buffer = activ_buf + 72; //для выравнивания синхры;
         int y = line / 2;
         switch (graphics_mode) {
-            case VGA_320x200x256:
+            case GRAPHICSMODE_DEFAULT:
             case VGA_320x240x256:
                 //заполняем пространство сверху и снизу графического буфера
                 if (false || (graphics_buffer_shift_y > y) || (y >= (graphics_buffer_shift_y + graphics_buffer_height))
@@ -222,7 +222,7 @@ static void __scratch_y("hdmi_driver") dma_handler_HDMI() {
 
                 break;
 
-            case TEXTMODE_80x30:
+            case TEXTMODE_DEFAULT:
             case TEXTMODE_53x30: {
                 // Заполняем первый и последний пиксель для выравнивания
                 {
