@@ -91,7 +91,7 @@ void __time_critical_func(render_core)() {
     __unreachable();
 }
 
-void __always_inline reboot_to_application() {
+void __always_inline run_application() {
     multicore_reset_core1();
 
     asm volatile (
@@ -223,8 +223,6 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
 
     if (FR_OK != f_mount(&fs, "SD", 1)) {
         draw_text("SD Card not inserted or SD Card error!", 0, 0, 12, 0);
-        // reboot: wait for sd-card
-        // watchdog_enable(100, true);
         while (true);
     }
 
@@ -280,6 +278,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
             total_files++;
         }
         f_closedir(&dir);
+
         qsort(fileItems, total_files, sizeof(file_item_t), compareFileItems);
 
         if (total_files > max_files) {
@@ -450,7 +449,7 @@ int main() {
         }
     }
 
-    reboot_to_application();
+    run_application();
 
     __unreachable();
 }
