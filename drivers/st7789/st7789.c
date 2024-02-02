@@ -21,11 +21,11 @@
 #include "hardware/dma.h"
 
 #ifndef SCREEN_WIDTH
-#define SCREEN_WIDTH 320
+#define SCREEN_WIDTH 160
 #endif
 
 #ifndef SCREEN_HEIGHT
-#define SCREEN_HEIGHT 240
+#define SCREEN_HEIGHT 128
 #endif
 
 // 126MHz SPI
@@ -230,6 +230,7 @@ void __inline __scratch_y("refresh_lcd") refresh_lcd() {
             for (int y = 0; y < SCREEN_HEIGHT; y++) {
                 // TODO add auto adjustable padding?
                 st7789_lcd_put_pixel(pio, sm, 0x0000);
+                st7789_lcd_put_pixel(pio, sm, 0x0000);
 
                 for (int x = 0; x < TEXTMODE_COLS; x++) {
                     const uint16_t offset = (y / 8) * (TEXTMODE_COLS * 2) + x * 2;
@@ -243,6 +244,7 @@ void __inline __scratch_y("refresh_lcd") refresh_lcd() {
                                                                        : colorIndex >> 4 & 0x0F]);
                     }
                 }
+                st7789_lcd_put_pixel(pio, sm, 0x0000);
                 st7789_lcd_put_pixel(pio, sm, 0x0000);
             }
             stop_pixels();
