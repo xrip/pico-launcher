@@ -15,6 +15,9 @@ extern "C" {
 #ifdef VGA
 #include "vga.h"
 #endif
+#ifdef TV
+#include "tv.h"
+#endif
 
 enum graphics_mode_t {
     TEXTMODE_DEFAULT,
