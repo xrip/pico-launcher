@@ -116,21 +116,46 @@ void horizontal_line( ) {
         sleep_us(0);    // should be tuned
 
         int y = scanline - V_BASE;
-        for (int x = 0; x < graphics_buffer_width; x++) {
-            int c = graphics_buffer[x+y*graphics_buffer_width];
-            switch (c) {
-                case BDOT:  // black
+        switch (graphics_mode) {
+            case GRAPHICSMODE_DEFAULT:
+                for (int x = 0; x < graphics_buffer_width; x++) {
+                    int c = graphics_buffer[x+y*graphics_buffer_width];
+                    switch (c) {
+                        case BDOT:  // black
+                            BLACK;
+                        break;
+                        case WDOT:  // white
+                            WHITE;
+                        break;
+                        case GDOT:  // gray
+                            GRAY;
+                        break;
+                        //case ZDOT:  // dummy
+                        //break;
+                        default:
+                            BLACK;
+                    }
+                }
+            break;
+            case TEXTMODE_DEFAULT: {
                 BLACK;
-                break;
-                case WDOT:  // white
-                WHITE;
-                break;
-                case GDOT:  // gray
-                GRAY;
-                break;
-                //case ZDOT:  // dummy
-                //break;
-                default:
+                for (int x = 0; x < TEXTMODE_COLS; x++) {
+                    const uint16_t offset = (y / 8) * (TEXTMODE_COLS * 2) + x * 2;
+                    const uint8_t c = text_buffer[offset];
+                    const uint8_t colorIndex = text_buffer[offset + 1];
+                    uint8_t glyph_row = fnt6x8[c * 8 + y % 8];
+
+                    for (int bit = 6; bit--;) {
+                        /*
+                        *output_buffer++ = glyph_row & 1
+                                               ? textmode_palette[colorIndex & 0xf] //цвет шрифта
+                                               : textmode_palette[colorIndex >> 4]; //цвет фона
+*/
+                        glyph_row & 1 ? WHITE: BLACK;
+
+                        glyph_row >>= 1;
+                    }
+                }
                 BLACK;
             }
         }
