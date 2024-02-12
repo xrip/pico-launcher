@@ -87,7 +87,7 @@ void __time_critical_func() dma_handler_VGA() {
     if (screen_line >= N_lines_visible) {
         //заполнение цветом фона
         if (screen_line == N_lines_visible | screen_line == N_lines_visible + 3) {
-            uint32_t* output_buffer_32bit = lines_pattern[2 + ((screen_line) & 1)];
+            uint32_t* output_buffer_32bit = lines_pattern[2 + (screen_line & 1)];
             output_buffer_32bit += shift_picture / 4;
             uint32_t p_i = (screen_line & is_flash_line) + (frame_number & is_flash_frame) & 1;
             uint32_t color32 = bg_color[p_i];
@@ -417,11 +417,11 @@ void graphics_set_mode(enum graphics_mode_t mode) {
     }
 
     //корректировка  палитры по маске бит синхры
-    bg_color[0] = (bg_color[0] & 0x3f3f3f3f) | palette16_mask | (palette16_mask << 16);
-    bg_color[1] = (bg_color[1] & 0x3f3f3f3f) | palette16_mask | (palette16_mask << 16);
+    bg_color[0] = bg_color[0] & 0x3f3f3f3f | palette16_mask | palette16_mask << 16;
+    bg_color[1] = bg_color[1] & 0x3f3f3f3f | palette16_mask | palette16_mask << 16;
     for (int i = 0; i < 256; i++) {
-        palette[0][i] = (palette[0][i] & 0x3f3f) | palette16_mask;
-        palette[1][i] = (palette[1][i] & 0x3f3f) | palette16_mask;
+        palette[0][i] = palette[0][i] & 0x3f3f | palette16_mask;
+        palette[1][i] = palette[1][i] & 0x3f3f | palette16_mask;
     }
 
     //инициализация шаблонов строк и синхросигнала
@@ -499,7 +499,7 @@ void graphics_set_bgcolor(const uint32_t color888) {
                   ((c_hi << 8 | c_lo) & 0x3f3f | palette16_mask);
     bg_color[1] = ((c_lo << 8 | c_hi) & 0x3f3f | palette16_mask) << 16 |
                   ((c_lo << 8 | c_hi) & 0x3f3f | palette16_mask);
-};
+}
 
 void graphics_set_palette(const uint8_t i, const uint32_t color888) {
     const uint8_t conv0[] = { 0b00, 0b00, 0b01, 0b10, 0b10, 0b10, 0b11, 0b11 };
@@ -620,7 +620,7 @@ void graphics_init() {
     dma_channel_set_irq0_enabled(dma_chan_ctrl, true);
 
     irq_set_enabled(VGA_DMA_IRQ, true);
-    dma_start_channel_mask((1u << dma_chan));
+    dma_start_channel_mask(1u << dma_chan);
 }
 
 
