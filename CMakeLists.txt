@@ -71,9 +71,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
         pico_multicore
         hardware_flash
+
+        tinyusb_board
+        tinyusb_device
 )
 
-family_configure_device_example(${PROJECT_NAME} noos)
+#family_configure_device_example(${PROJECT_NAME} noos)
 target_link_options(${PROJECT_NAME} PRIVATE -Xlinker --print-memory-usage)
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src

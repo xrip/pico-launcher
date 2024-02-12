@@ -438,7 +438,7 @@ int main() {
         }
 
         // F11 Run launcher
-        if (nespad_state & DPAD_SELECT || input == 0x57) {
+        if (nespad_state && !(nespad_state & DPAD_START) || input && input != 0x58) {
             sem_init(&vga_start_semaphore, 0, 1);
             multicore_launch_core1(render_core);
             sem_release(&vga_start_semaphore);
