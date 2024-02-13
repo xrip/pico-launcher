@@ -55,4 +55,7 @@ static const uint16_t textmode_palette[16] = {
 inline static void graphics_set_bgcolor(uint32_t color888) {
     // dummy
 }
+inline static void graphics_set_flashmode(bool flash_line, bool flash_frame) {
+    // dummy
+}
 void refresh_lcd();
