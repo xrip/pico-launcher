@@ -10,6 +10,8 @@ option(TFT "Enable TFT display" OFF)
 option(ILI9341 "Enable TFT ILI9341 display" OFF)
 option(HDMI "Enable HDMI display" OFF)
 option(TV "Enable TV composite output" OFF)
+option(SOFTTV "Enable TV soft composite output" OFF)
+
 option(FLASH_SIZE "Target Flash Size" 2048)
 
 if(NOT FLASH_SIZE)
@@ -38,6 +40,7 @@ add_subdirectory(drivers/vga-nextgen)
 add_subdirectory(drivers/st7789)
 add_subdirectory(drivers/hdmi)
 add_subdirectory(drivers/tv)
+add_subdirectory(drivers/tv-software)
 add_subdirectory(drivers/graphics)
 
 # INCLUDE FILES THAT SHOULD BE COMPILED:
@@ -136,7 +139,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
 
 pico_define_boot_stage2(slower_boot2 ${PICO_DEFAULT_BOOT_STAGE2_FILE})
-math(EXPR CUSTOM_XIP_BASE "1024 * (${FLASH_SIZE} - 64) + 0x10000000")
+math(EXPR CUSTOM_XIP_BASE "1024 * (${FLASH_SIZE} - 68) + 0x10000000")
 message(STATUS "${CUSTOM_XIP_BASE}")
 target_compile_definitions(slower_boot2 PRIVATE CUSTOM_XIP_BASE=${CUSTOM_XIP_BASE})
 target_compile_definitions(slower_boot2 PRIVATE PICO_FLASH_SPI_CLKDIV=4)
@@ -167,6 +170,10 @@ ELSEIF(TV)
     target_compile_definitions(${PROJECT_NAME} PRIVATE TV)
     target_link_libraries(${PROJECT_NAME} PRIVATE tv)
     SET(BUILD_NAME "${BUILD_NAME}-TV")
+ELSEIF(SOFTTV)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE SOFTTV)
+	target_link_libraries(${PROJECT_NAME} PRIVATE tv-software)
+	SET(BUILD_NAME "${BUILD_NAME}-TV-SOFT")
 ELSE()
     target_compile_definitions(${PROJECT_NAME} PRIVATE VGA)
     target_link_libraries(${PROJECT_NAME} PRIVATE vga-nextgen)

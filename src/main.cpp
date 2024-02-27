@@ -56,11 +56,12 @@ void __time_critical_func(render_core)() {
     graphics_init();
 
     const auto buffer = (uint8_t *)SCREEN;
-    graphics_set_buffer(buffer, TEXTMODE_COLS, TEXTMODE_ROWS);
-    graphics_set_textbuffer(buffer);
+
     graphics_set_bgcolor(0x000000);
     graphics_set_offset(0, 0);
     graphics_set_mode(TEXTMODE_DEFAULT);
+    graphics_set_buffer(buffer, TEXTMODE_COLS, TEXTMODE_ROWS);
+    graphics_set_textbuffer(buffer);
     clrScr(1);
 
     sem_acquire_blocking(&vga_start_semaphore);
@@ -222,7 +223,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
     FILINFO fileInfo;
 
     if (FR_OK != f_mount(&fs, "SD", 1)) {
-        draw_text("SD Card not inserted or SD Card error!", 0, 0, 12, 0);
+        draw_text("SD Card not inserted or SD Card error!", 0, 2, 12, 0);
         while (true);
     }
 
@@ -234,28 +235,18 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
         draw_window(tmp, 0, 0, TEXTMODE_COLS, TEXTMODE_ROWS - 1);
         memset(tmp, ' ', TEXTMODE_COLS);
 
-#ifndef TFT
         draw_text(tmp, 0, 29, 0, 0);
         auto off = 0;
         draw_text("START", off, 29, 7, 0);
         off += 5;
         draw_text(" Run at cursor ", off, 29, 0, 3);
         off += 16;
-        draw_text("SELECT", off, 29, 7, 0);
-        off += 6;
-        draw_text(" Run previous  ", off, 29, 0, 3);
-        off += 16;
-        draw_text("ARROWS", off, 29, 7, 0);
-        off += 6;
-        draw_text(" Navigation    ", off, 29, 0, 3);
-        off += 16;
         draw_text("A/F10", off, 29, 7, 0);
         off += 5;
         draw_text(" USB DRV ", off, 29, 0, 3);
-#endif
 
         if (FR_OK != f_opendir(&dir, basepath)) {
-            draw_text("Failed to open directory", 1, 1, 4, 0);
+            draw_text("Failed to open directory", 1, 2, 4, 0);
             while (true);
         }
 
@@ -422,7 +413,7 @@ int main() {
 
     hw_set_bits(&vreg_and_chip_reset_hw->vreg, VREG_AND_CHIP_RESET_VREG_VSEL_BITS);
     sleep_ms(10);
-    set_sys_clock_khz(252 * KHZ, true);
+    set_sys_clock_khz(378 * KHZ, true);
 
     keyboard_init();
     //keyboard_send(0xFF);

@@ -238,8 +238,8 @@ void __inline __scratch_y("refresh_lcd") refresh_lcd() {
 
                     for (uint8_t bit = 0; bit < 6; bit++) {
                         st7789_lcd_put_pixel(pio, sm, textmode_palette[(c && CHECK_BIT(glyph_row, bit))
-                                                                       ? colorIndex & 0x0F
-                                                                       : colorIndex >> 4 & 0x0F]);
+                                                                           ? colorIndex & 0x0F
+                                                                           : colorIndex >> 4 & 0x0F]);
                     }
                 }
                 st7789_lcd_put_pixel(pio, sm, 0x0000);
@@ -255,7 +255,8 @@ void __inline __scratch_y("refresh_lcd") refresh_lcd() {
             // st7789_dma_pixels(graphics_buffer, i);
             while (--i) {
                st7789_lcd_put_pixel(pio, sm, palette[*bitmap++]);
-            }
+                }
+
             stop_pixels();
         }
     }
@@ -267,4 +268,3 @@ void __inline __scratch_y("refresh_lcd") refresh_lcd() {
 void graphics_set_palette(const uint8_t i, const uint32_t color) {
     palette[i] = (uint16_t)color;
 }
-
