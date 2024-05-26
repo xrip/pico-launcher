@@ -14,7 +14,7 @@ option(SOFTTV "Enable TV soft composite output" OFF)
 
 # 16384
 # 4096
-option(FLASH_SIZE "Target Flash Size" 2048)
+option(FLASH_SIZE "Target Flash Size" 4096)
 
 if(NOT FLASH_SIZE)
 set(FLASH_SIZE 2048)
