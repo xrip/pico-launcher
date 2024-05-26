@@ -12,10 +12,12 @@ option(HDMI "Enable HDMI display" OFF)
 option(TV "Enable TV composite output" OFF)
 option(SOFTTV "Enable TV soft composite output" OFF)
 
-option(FLASH_SIZE "Target Flash Size" 16384)
+# 16384
+# 4096
+option(FLASH_SIZE "Target Flash Size" 2048)
 
 if(NOT FLASH_SIZE)
-set(FLASH_SIZE 16384)
+set(FLASH_SIZE 2048)
 endif ()
 
 SET(BUILD_NAME "${PROJECT_NAME}-${FLASH_SIZE}K")

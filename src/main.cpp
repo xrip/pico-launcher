@@ -136,15 +136,16 @@ bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
 
         multicore_lockout_start_blocking();
         const uint32_t ints = save_and_disable_interrupts();
-
+        bool toff = false;
         do {
             uint8_t buffer[FLASH_SECTOR_SIZE];
-            f_read(&file, &uf2_block, sizeof uf2_block, &bytes_read);
+            f_read(&file, &uf2_block, sizeof(uf2_block), &bytes_read);
             memcpy(buffer + data_sector_index, uf2_block.data, 256);
             data_sector_index += 256;
-            if (flash_target_offset == 0)
+            if (!toff) {
                 flash_target_offset = uf2_block.targetAddr - XIP_BASE;
-
+                toff = true;
+            }
             if (data_sector_index == FLASH_SECTOR_SIZE || bytes_read == 0) {
                 data_sector_index = 0;
 
@@ -158,7 +159,8 @@ bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
 
                 gpio_put(PICO_DEFAULT_LED_PIN, (flash_target_offset >> 13) & 1);
 
-                flash_target_offset = 0;
+                flash_target_offset += FLASH_SECTOR_SIZE;
+                toff = false;
             }
         }
         while (bytes_read != 0);
@@ -430,7 +432,7 @@ int main() {
             reset_usb_boot(0, 0);
         }
 
-        // F11 Run launcher
+        // Any other key/button - run launcher
         if (nespad_state && !(nespad_state & DPAD_START) || input && input != 0x58) {
             sem_init(&vga_start_semaphore, 0, 1);
             multicore_launch_core1(render_core);
