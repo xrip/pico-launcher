@@ -142,6 +142,8 @@ bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
             f_read(&file, &uf2_block, sizeof uf2_block, &bytes_read);
             memcpy(buffer + data_sector_index, uf2_block.data, 256);
             data_sector_index += 256;
+            if (flash_target_offset == 0)
+                flash_target_offset = uf2_block.targetAddr - XIP_BASE;
 
             if (data_sector_index == FLASH_SECTOR_SIZE || bytes_read == 0) {
                 data_sector_index = 0;
@@ -156,7 +158,7 @@ bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
 
                 gpio_put(PICO_DEFAULT_LED_PIN, (flash_target_offset >> 13) & 1);
 
-                flash_target_offset += FLASH_SECTOR_SIZE;
+                flash_target_offset = 0;
             }
         }
         while (bytes_read != 0);
