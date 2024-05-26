@@ -14,13 +14,17 @@ option(SOFTTV "Enable TV soft composite output" OFF)
 
 # 16384
 # 4096
-option(FLASH_SIZE "Target Flash Size" 4096)
+option(FLASH_SIZE "Target Flash Size" 2048)
 
 if(NOT FLASH_SIZE)
 set(FLASH_SIZE 2048)
 endif ()
 
-SET(BUILD_NAME "${PROJECT_NAME}-${FLASH_SIZE}K")
+if(NOT LAUNCHER_VERSION)
+set(LAUNCHER_VERSION 2)
+endif ()
+
+SET(BUILD_NAME "${PROJECT_NAME}-${FLASH_SIZE}K-${LAUNCHER_VERSION}")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)

@@ -3,6 +3,7 @@
 #include <hardware/clocks.h>
 #include <hardware/flash.h>
 #include <hardware/structs/vreg_and_chip_reset.h>
+#include <hardware/watchdog.h>
 #include <pico/bootrom.h>
 #include <pico/multicore.h>
 #include <pico/stdlib.h>
@@ -382,6 +383,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
                     sprintf(tmp, "%s\\%s", basepath, file_at_cursor.filename);
 
                     if (load_firmware(tmp)) {
+                        watchdog_enable(100, true);
                         return;
                     }
                 }
