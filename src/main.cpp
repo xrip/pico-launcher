@@ -3,6 +3,7 @@
 #include <hardware/clocks.h>
 #include <hardware/flash.h>
 #include <hardware/structs/vreg_and_chip_reset.h>
+#include <hardware/watchdog.h>
 #include <pico/bootrom.h>
 #include <pico/multicore.h>
 #include <pico/stdlib.h>
@@ -108,9 +109,26 @@ void __always_inline run_application() {
     __unreachable();
 }
 
-bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
+inline static uint32_t read_flash_block(FIL * f, uint8_t * buffer, uint32_t expected_flash_target_offset) {
     UINT bytes_read = 0;
     struct UF2_Block_t uf2_block{};
+    uint32_t data_sector_index = 0;
+    for(; data_sector_index < FLASH_SECTOR_SIZE; data_sector_index += 256) {
+        f_read(f, &uf2_block, sizeof(uf2_block), &bytes_read);
+        if (!bytes_read) break;
+        if (expected_flash_target_offset != uf2_block.targetAddr - XIP_BASE) {
+            f_lseek(f, f_tell(f) - sizeof(uf2_block)); // we will reread this block, it doesnt belong to this continues block
+            expected_flash_target_offset = uf2_block.targetAddr - XIP_BASE;
+            break;
+        }
+        memcpy(buffer + data_sector_index, uf2_block.data, 256);
+        expected_flash_target_offset += 256;
+        gpio_put(PICO_DEFAULT_LED_PIN, (expected_flash_target_offset >> 13) & 1);
+    }
+    return expected_flash_target_offset;
+}
+
+bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
     FIL file;
 
     constexpr int window_y = (TEXTMODE_ROWS - 5) / 2;
@@ -132,39 +150,31 @@ bool __not_in_flash_func(load_firmware)(const char pathname[256]) {
 
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
         uint32_t flash_target_offset = 0;
-        uint32_t data_sector_index = 0;
 
         multicore_lockout_start_blocking();
         const uint32_t ints = save_and_disable_interrupts();
-
-        do {
+        bool toff = false;
+        while(true) {
             uint8_t buffer[FLASH_SECTOR_SIZE];
-            f_read(&file, &uf2_block, sizeof uf2_block, &bytes_read);
-            memcpy(buffer + data_sector_index, uf2_block.data, 256);
-            data_sector_index += 256;
-
-            if (data_sector_index == FLASH_SECTOR_SIZE || bytes_read == 0) {
-                data_sector_index = 0;
-
-                //подмена загрузчика boot2 прошивки на записанный ранее
-                if (flash_target_offset == 0) {
-                    memcpy(buffer, (uint8_t *)XIP_BASE, 256);
-                }
-
-                flash_range_erase(flash_target_offset, FLASH_SECTOR_SIZE);
-                flash_range_program(flash_target_offset, buffer, FLASH_SECTOR_SIZE);
-
-                gpio_put(PICO_DEFAULT_LED_PIN, (flash_target_offset >> 13) & 1);
-
-                flash_target_offset += FLASH_SECTOR_SIZE;
+            uint32_t next_flash_target_offset = read_flash_block(&file, buffer, flash_target_offset);
+            if (next_flash_target_offset == flash_target_offset) {
+                break;
             }
+            //подмена загрузчика boot2 прошивки на записанный ранее
+            if (flash_target_offset == 0) {
+                memcpy(buffer, (uint8_t *)XIP_BASE, 256);
+            }
+
+            flash_range_erase(flash_target_offset, FLASH_SECTOR_SIZE);
+            flash_range_program(flash_target_offset, buffer, FLASH_SECTOR_SIZE);
+
+            flash_target_offset = next_flash_target_offset;
         }
-        while (bytes_read != 0);
 
         restore_interrupts(ints);
         multicore_lockout_end_blocking();
 
-        gpio_put(PICO_DEFAULT_LED_PIN, true);
+        gpio_put(PICO_DEFAULT_LED_PIN, false);
     }
     f_close(&file);
     return true;
@@ -373,6 +383,7 @@ void __not_in_flash_func(filebrowser)(const char pathname[256], const char* exec
                     sprintf(tmp, "%s\\%s", basepath, file_at_cursor.filename);
 
                     if (load_firmware(tmp)) {
+                        watchdog_enable(100, true);
                         return;
                     }
                 }
@@ -428,7 +439,7 @@ int main() {
             reset_usb_boot(0, 0);
         }
 
-        // F11 Run launcher
+        // Any other key/button - run launcher
         if (nespad_state && !(nespad_state & DPAD_START) || input && input != 0x58) {
             sem_init(&vga_start_semaphore, 0, 1);
             multicore_launch_core1(render_core);
